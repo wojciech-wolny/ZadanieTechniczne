@@ -37,7 +37,7 @@ Most tests are component tests. Keep a few integration tests and at least one sy
 6. No sleeps, no real network in component tests. Use in memory streams.
 7. API tests use `fastapi.testclient.TestClient` with `create_app()` inside a `with` block so lifespan runs.
 8. Test observable behaviour, never private attributes.
-9. Tests are traceable to a requirement: the docstring states which requirement the test verifies.
+9. Tests are traceable to a requirement: the docstring starts with the requirement ID from the `task-requirements` skill, for example `"""Verify ALG-2: ..."""`.
 
 ## Example
 
@@ -49,7 +49,7 @@ from server.sinks import convert_to_ascii
 
 
 def test_process_samples_incomplete_window_produces_no_result() -> None:
-    """Verify that the average ignores the last incomplete window."""
+    """Verify ALG-6: the average ignores the last incomplete window."""
     algorithm = AverageAlgorithm(window_size=3)
 
     results = []
@@ -68,7 +68,7 @@ def test_process_samples_incomplete_window_produces_no_result() -> None:
     ids=["below_range", "lower_bound", "rounded", "upper_bound", "above_range"],
 )
 def test_convert_to_ascii_boundaries(value: float, expected: str) -> None:
-    """Verify the stdout ASCII mapping at its range boundaries."""
+    """Verify OUT-4: the stdout ASCII mapping at its range boundaries."""
     character = convert_to_ascii(value)
 
     assert character == expected
@@ -84,7 +84,7 @@ from server.main import create_app
 
 
 def test_read_task_unknown_id_returns_not_found() -> None:
-    """Verify that requesting a missing task returns 404."""
+    """Verify API-3: requesting a missing task returns 404."""
     with TestClient(create_app()) as client:
         response = client.get("/tasks/unknown")
 
