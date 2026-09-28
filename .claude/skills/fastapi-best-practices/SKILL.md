@@ -7,7 +7,7 @@ description: Applies FastAPI and Pydantic v2 best practices for REST API design,
 
 Always follow the `python-code-style` skill as well.
 
-Target **Python 3.14.7** with current FastAPI and Pydantic 2.12 or newer (first release supporting 3.14). Keep `Annotated[...]` for dependencies and discriminated unions because FastAPI and Pydantic read it at runtime.
+Target **Python 3.13.7** with current FastAPI and Pydantic 2. Keep `Annotated[...]` for dependencies and discriminated unions because FastAPI and Pydantic read it at runtime.
 
 ## Structure
 
@@ -30,7 +30,7 @@ Keep endpoints thin: validate input, call a service, return a model. Business lo
 4. **Use `Annotated` dependencies:** `TaskRegistryDep = Annotated[TaskRegistry, Depends(get_task_registry)]`.
 5. **Pydantic v2 models** for every request and response. Set `response_model` or a return annotation, and `status_code` explicitly.
 6. **Separate models:** `TaskCreate` for input, `TaskRead` for output. Never return internal objects directly.
-7. **Discriminated unions** for variant input, for example algorithm parameters: `Field(discriminator="algorithm")`.
+7. **Discriminated unions** for variant input. Algorithm parameters use `Field(discriminator="name")` on the `algorithm` field of `TaskCreate`, as in `docs/rest-api.md`.
 8. **Validate with `Field`** constraints (`gt=0`, `ge=1`) instead of manual checks.
 9. **Use `fastapi.status` constants**: `201` on create, `204` on delete, `404` when missing, `422` left to validation.
 10. **Raise `HTTPException`** from endpoints only. Services return `None` or raise domain exceptions mapped by an exception handler.
@@ -121,7 +121,7 @@ from pydantic import BaseModel, Field
 class PassthroughConfig(BaseModel):
     """Configuration of the passthrough algorithm."""
 
-    algorithm: Literal["passthrough"]
+    name: Literal["passthrough"]
 
 
 class AverageConfig(BaseModel):
@@ -130,16 +130,33 @@ class AverageConfig(BaseModel):
     :attr window_size: number of samples in one window
     """
 
-    algorithm: Literal["average"]
-    window_size: int = Field(gt=0)
+    name: Literal["average"]
+    window_size: int = Field(ge=1, le=1_000_000)
 
 
-AlgorithmConfig = Annotated[PassthroughConfig | AverageConfig, Field(discriminator="algorithm")]
+class LinearRegressionConfig(BaseModel):
+    """Configuration of the windowed linear regression algorithm.
+
+    :attr window_size: number of samples in one window, at least 2
+    """
+
+    name: Literal["linear_regression"]
+    window_size: int = Field(ge=2, le=1_000_000)
+
+
+AlgorithmConfig = Annotated[
+    PassthroughConfig | AverageConfig | LinearRegressionConfig,
+    Field(discriminator="name"),
+]
 
 
 class TaskCreate(BaseModel):
-    """Request body used to create a processing task."""
+    """Request body used to create a processing task.
 
-    config: AlgorithmConfig
+    :attr algorithm: algorithm name and its parameters
+    :attr sink: where numeric results are written
+    """
+
+    algorithm: AlgorithmConfig
     sink: Literal["null", "stdout"] = "null"
 ```

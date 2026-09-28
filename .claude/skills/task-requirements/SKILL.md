@@ -101,7 +101,7 @@ Multiple Producers, multiple server instances, distributed processing, authentic
 
 | ID | Requirement |
 |----|-------------|
-| DLV-1 | Python 3.10 or newer (project targets 3.14) |
+| DLV-1 | Python 3.10 or newer (project targets 3.13.7) |
 | DLV-2 | Producer application code |
 | DLV-3 | Processing Server code |
 | DLV-4 | Complete project and dependency setup (`pyproject.toml` with `uv`) |
@@ -117,9 +117,10 @@ Files in `wytyczne/` verify the solution end to end with the `stdout` sink:
 | File | Configuration | Expected |
 |------|---------------|----------|
 | `passthrough.txt` | `passthrough` | `Passthrough - It works! ` |
-| `example_text.txt` | `passthrough` | readable sentence in the middle section |
-| `example_text.txt` | `average`, `N=6` | readable text in the first section |
-| `example_text.txt` | `linear_regression`, `N=4` | readable text in the last section |
+| `example_text.txt` | `passthrough` | `Passthrough works: these samples are printed raw, with no filtering.` |
+| `example_text.txt` | `average`, `N=6` | `Hello! Nice work :)` |
+| `example_text.txt` | `linear_regression`, `N=4` | `Congratulation! It is correct decoded data for linear regression` |
+| `example_binary.f32` | `passthrough` | `Passthrough works on binary too: raw float32 samples, no filtering.` |
 
 Other parts of each file look like noise under a given configuration; that is expected.
 

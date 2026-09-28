@@ -7,7 +7,7 @@ description: Writes simple pytest tests following ISTQB test design techniques (
 
 Tests must be simple. Always follow the `python-code-style` skill as well.
 
-Run on **Python 3.14.7** with pytest 8.4 or newer. Use `pytest-asyncio` only for code that must be awaited; prefer testing sync logic directly.
+Run on **Python 3.13.7** with pytest 8.4 or newer. Use `pytest-asyncio` only for code that must be awaited; prefer testing sync logic directly.
 
 ## Test levels
 
@@ -32,12 +32,13 @@ Most tests are component tests. Keep a few integration tests and at least one sy
 1. Structure every test as **Arrange, Act, Assert** separated by one blank line. No comments.
 2. One behaviour per test. Name it `test_<action>_<condition>_<expected>`.
 3. Use plain `assert`. No custom assertion helpers unless reused three times.
-4. Use `pytest.mark.parametrize` with `ids` instead of loops inside a test.
-5. Fixtures only for shared setup, defined in `conftest.py`.
-6. No sleeps, no real network in component tests. Use in memory streams.
-7. API tests use `fastapi.testclient.TestClient` with `create_app()` inside a `with` block so lifespan runs.
-8. Test observable behaviour, never private attributes.
-9. Tests are traceable to a requirement: the docstring starts with the requirement ID from the `task-requirements` skill, for example `"""Verify ALG-2: ..."""`.
+4. Readability beats DRY in tests: each test reads on its own, repeating short Arrange steps is fine. KISS and YAGNI apply fully: no frameworks on top of pytest, no tests for code that does not exist.
+5. Use `pytest.mark.parametrize` with `ids` instead of loops inside a test.
+6. Fixtures only for shared setup, defined in `conftest.py`.
+7. No sleeps, no real network in component tests. Use in memory streams.
+8. API tests use `fastapi.testclient.TestClient` with `create_app()` inside a `with` block so lifespan runs.
+9. Test observable behaviour, never private attributes.
+10. Tests are traceable to a requirement: the docstring starts with the requirement ID from the `task-requirements` skill, for example `"""Verify ALG-2: ..."""`.
 
 ## Example
 

@@ -9,17 +9,29 @@ Simple, laconic, human readable code. PEP 8 is the base for formatting.
 
 ## Python version
 
-Target **Python 3.14.7**. Set `requires-python = ">=3.14"` in `pyproject.toml` and `target-version = "py314"` for ruff.
+Target **Python 3.13.7**. Set `requires-python = ">=3.13"` in `pyproject.toml` and `target-version = "py313"` for ruff.
 
-Use modern syntax:
+Use modern syntax available in 3.13:
 
 1. `X | None` and builtin generics `list[float]`, `dict[str, Task]`. Never `Optional`, `List`, `Dict`.
-2. Annotations are evaluated lazily (PEP 649). Do not add `from __future__ import annotations` and do not quote forward references.
+2. Annotations are evaluated at definition time. Do not add `from __future__ import annotations`. Quote a forward reference only when the name is not yet defined.
 3. `type` statement for aliases: `type Samples = list[float]`.
 4. PEP 695 generics: `class Registry[ItemType]:` and `def find_first[ItemType](items: list[ItemType]) -> ItemType:`, no `TypeVar`.
 5. `match` statement when choosing between several named variants.
-6. `except ValueError, TypeError:` without parentheses is allowed (PEP 758) but only when `except` is unavoidable.
+6. `except (ValueError, TypeError):` with parentheses, and only when `except` is unavoidable.
 7. `typing.Self`, `typing.override` for methods returning the instance or overriding a base.
+
+## Design principles
+
+Apply in this order when they conflict: KISS, then YAGNI, then DRY.
+
+1. **KISS (keep it simple):** choose the most direct solution a reader understands at first glance. Plain functions before classes, a dictionary before a plugin system, a `for` loop before a clever trick.
+2. **YAGNI (you aren't gonna need it):** build only what a current requirement or test needs. No unused parameters, hooks, config options, base classes with one child, or "future proof" layers. The task will grow, but extension points are added when the second variant arrives, except the algorithm and sink registries required by the task.
+3. **DRY (don't repeat yourself):** every piece of knowledge has one home (wire format, ASCII mapping, limits, defaults). Extract duplicated logic on the third repetition (rule of three); two similar lines are cheaper than a wrong abstraction.
+4. **Single responsibility:** a function does one thing, a module has one reason to change. Parsing, processing and I/O live apart.
+5. **Composition over inheritance:** combine small objects (a task owns an algorithm and a sink). Inherit only for a real "is a" relation with shared state, such as `WindowAlgorithm`.
+6. **Fail fast:** validate at the boundary (Pydantic, CLI arguments) and raise clear errors; inner code trusts validated input and does not check it again.
+7. **Explicit over implicit:** no hidden global state, no magic values; name constants (`SAMPLE_FORMAT = "<d"`) and pass dependencies as parameters.
 
 ## Rules
 
@@ -106,6 +118,9 @@ class AverageAlgorithm:
 
 ## Checklist before finishing
 
+- [ ] KISS: the simplest working solution, nothing clever
+- [ ] YAGNI: no code without a current requirement or test using it
+- [ ] DRY: constants and rules defined once, no logic repeated three times
 - [ ] No `#` comments anywhere
 - [ ] Every public function and class has a one sentence docstring
 - [ ] No "-" inside docstrings
