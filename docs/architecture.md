@@ -44,8 +44,8 @@ src/
     server/
         main.py            create_app, lifespan, run entry point
         settings.py        Settings (pydantic_settings)
-        api/tasks.py       APIRouter /tasks
-        api/stream.py      APIRouter /stream (connection status)
+        api/tasks.py       APIRouter /api/v1/tasks
+        api/stream.py      APIRouter /api/v1/stream (connection status)
         schemas.py         Pydantic request and response models
         dependencies.py    Depends providers
         services/

@@ -1,16 +1,16 @@
 # REST API
 
-Base URL `http://127.0.0.1:8000`. Interactive docs at `/docs`.
+Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). Interactive docs stay at `/docs`. A later API version adds a new prefix and leaves these paths unchanged.
 
 ## Endpoints
 
 | Method | Path | Request | Response | Status |
 |--------|------|---------|----------|--------|
-| POST | `/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached |
-| GET | `/tasks` | | `list[TaskRead]` | 200 |
-| GET | `/tasks/{task_id}` | | `TaskRead` | 200, 404 |
-| DELETE | `/tasks/{task_id}` | | empty | 204, 404 |
-| GET | `/stream` | | `StreamRead` | 200 |
+| POST | `/api/v1/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached |
+| GET | `/api/v1/tasks` | | `list[TaskRead]` | 200 |
+| GET | `/api/v1/tasks/{task_id}` | | `TaskRead` | 200, 404 |
+| DELETE | `/api/v1/tasks/{task_id}` | | empty | 204, 404 |
+| GET | `/api/v1/stream` | | `StreamRead` | 200 |
 
 `DELETE` stops and removes the task in one step (API-4); a removed task is gone from the list.
 
@@ -60,12 +60,12 @@ class StreamRead(BaseModel):
 `window_size` is the parameter `N` from the task. Unknown algorithm or sink names and invalid sizes are rejected with 422 by Pydantic. A new component requires a configuration model and registry entry so it is represented explicitly in generated OpenAPI.
 
 Task IDs are UUID4 values serialized as lowercase strings. `created_at` is an
-RFC 3339 UTC timestamp. `GET /tasks` returns tasks in creation order.
+RFC 3339 UTC timestamp. `GET /api/v1/tasks` returns tasks in creation order.
 
 ## Examples
 
 ```http
-POST /tasks
+POST /api/v1/tasks
 {"algorithm": {"name": "average", "window_size": 6}, "sink": "stdout"}
 ```
 
@@ -110,5 +110,5 @@ An algorithm or sink exception changes that task to `failed`; the task remains i
 responses until deleted. `error` contains a short message without a traceback or
 internal path.
 
-`/stream.samples_received` counts finite samples accepted since server startup and
+`/api/v1/stream` field `samples_received` counts finite samples accepted since server startup and
 does not reset when a Producer disconnects.

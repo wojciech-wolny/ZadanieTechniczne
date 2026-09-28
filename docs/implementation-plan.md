@@ -40,13 +40,13 @@ Each stage ends with passing tests, a commit and a green CI run. Stages 0 to 6 a
 ## Stage 3: decoder and receiver
 
 1. `SampleDecoder.decode(chunk) -> list[float]` with remainder and finite-value validation.
-2. `SampleReceiver` wrapping `asyncio.start_server`: one active connection, reject extra ones, bounded `read(65536)`, dispatch decoded batches, clean close on disconnect or error, `samples_received` and `producer_connected` for the `/stream` endpoint.
+2. `SampleReceiver` wrapping `asyncio.start_server`: one active connection, reject extra ones, bounded `read(65536)`, dispatch decoded batches, clean close on disconnect or error, `samples_received` and `producer_connected` for the `/api/v1/stream` endpoint.
 
 ## Stage 4: REST API
 
 1. `schemas.py` with the models from [rest-api.md](rest-api.md).
 2. `create_app()` with `lifespan` starting the registry and receiver on `app.state`.
-3. Routers `/tasks` and `/stream`, exception handler mapping the task limit error to 409.
+3. Routers mounted at `/api/v1/tasks` and `/api/v1/stream`, exception handler mapping the task limit error to 409.
 4. `processing-server` entry point calling `uvicorn.run(create_app(), ...)`.
 
 ## Stage 5: producer and first end-to-end path

@@ -87,7 +87,7 @@ from server.main import create_app
 def test_read_task_unknown_id_returns_not_found() -> None:
     """Verify API-3: requesting a missing task returns 404."""
     with TestClient(create_app()) as client:
-        response = client.get("/tasks/unknown")
+        response = client.get("/api/v1/tasks/unknown")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
 ```

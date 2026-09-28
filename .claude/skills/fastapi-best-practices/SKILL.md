@@ -36,7 +36,7 @@ Keep endpoints thin: validate input, call a service, return a model. Business lo
 10. **Raise `HTTPException`** from endpoints only. Services return `None` or raise domain exceptions mapped by an exception handler.
 11. **Use `async def`** only when the body awaits or is non blocking. Never call blocking I/O inside `async def`.
 12. **Settings** through `pydantic_settings.BaseSettings` read from environment.
-13. Use nouns and plural resource paths: `POST /tasks`, `GET /tasks`, `GET /tasks/{task_id}`, `DELETE /tasks/{task_id}`.
+13. Use nouns and plural resource paths under the version prefix from API-6: `POST /api/v1/tasks`, `GET /api/v1/tasks`, `GET /api/v1/tasks/{task_id}`, `DELETE /api/v1/tasks/{task_id}`, `GET /api/v1/stream`. Mount resource routers on one `APIRouter(prefix="/api/v1")`. Interactive docs stay at `/docs`.
 
 ## Example
 
@@ -71,6 +71,8 @@ def get_task_registry(request: Request) -> TaskRegistry:
 TaskRegistryDep = Annotated[TaskRegistry, Depends(get_task_registry)]
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+api_v1 = APIRouter(prefix="/api/v1")
+api_v1.include_router(router)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -106,7 +108,7 @@ def create_app() -> FastAPI:
     :return: configured application
     """
     app = FastAPI(title="Processing Server", lifespan=run_lifespan)
-    app.include_router(router)
+    app.include_router(api_v1)
     return app
 ```
 

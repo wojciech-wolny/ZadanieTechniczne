@@ -92,6 +92,7 @@ Library or own implementation of the math is allowed.
 | API-3 | Get information and statistics of a task |
 | API-4 | Stop and remove a task |
 | API-5 | Endpoints, models, status codes and error responses are free to choose |
+| API-6 | Every resource is served under `/api/v1`. A later version is a new prefix; `/api/v1` stays unchanged |
 
 ## Out of scope
 

@@ -10,10 +10,11 @@
 6. **Tasks survive a Producer disconnect.** Complete decoded samples from successive connections form one logical stream. Statistics and partial algorithm windows survive reconnects, so a later Producer can complete a window started by an earlier one. A partial 8 byte wire sample is discarded.
 7. **Registries by name.** Algorithms and sinks are selected by a name in dictionaries of factories; the API uses a discriminated union so validation and OpenAPI stay explicit. A new variant requires a new implementation, configuration model and registry entry, but no changes to existing component classes.
 8. **Windows stored as lists of at most N samples.** Memory per task is O(N), bounded by `window_size <= 100_000`; `MAX_TASKS` defaults to 32. The worst-case window storage is therefore bounded, while deployments can choose lower limits. Linear regression uses the closed form OLS slope over positions `0..N-1`; no NumPy needed.
-9. **Delete means stop.** There is no paused state; `DELETE /tasks/{id}` closes the sink and removes the task.
+9. **Delete means stop.** There is no paused state; `DELETE /api/v1/tasks/{id}` closes the sink and removes the task.
 10. **Settings from environment** via `pydantic_settings`: `TCP_HOST`, `TCP_PORT`, `HTTP_HOST`, `HTTP_PORT`, `MAX_TASKS`. Defaults bind to `127.0.0.1`.
 11. **Python 3.13.7.** The task requires 3.10 or newer; 3.13.7 is the newest interpreter available. `requires-python = ">=3.13"` and ruff `target-version = "py313"`.
 12. **Task failures are isolated.** An algorithm or sink exception marks only that task as failed. Its safe error summary is exposed by the API, and other tasks continue receiving samples.
+13. **Path versioning.** REST resources use the prefix `/api/v1` (API-6). The next incompatible contract is `/api/v2`. `/docs` and `/openapi.json` stay unversioned.
 
 ## Assumptions
 
@@ -33,7 +34,7 @@
 |------------|-------------------|
 | Tasks live in memory and vanish on restart | Persist task configs and recreate them on startup |
 | Slow sink slows all tasks and the Producer | Per task `asyncio.Queue` with bounded size and a drop or block policy |
-| No stop without removal, no restart | Add task status transitions and `PATCH /tasks/{id}` |
+| No stop without removal, no restart | Add task status transitions and `PATCH /api/v1/tasks/{id}` |
 | One Producer only | Map connections to named streams and let tasks subscribe to a stream |
 | Samples in a disconnect remainder are lost | Framing with sequence numbers if exactness across reconnects matters |
 | stdout output of many tasks interleaves | File or WebSocket sink per task |
