@@ -7,6 +7,8 @@ description: Writes simple pytest tests following ISTQB test design techniques (
 
 Tests must be simple. Always follow the `python-code-style` skill as well.
 
+Run on **Python 3.14.7** with pytest 8.4 or newer. Use `pytest-asyncio` only for code that must be awaited; prefer testing sync logic directly.
+
 ## Test levels
 
 | Level | Scope | Location |

@@ -7,6 +7,8 @@ description: Applies FastAPI and Pydantic v2 best practices for REST API design,
 
 Always follow the `python-code-style` skill as well.
 
+Target **Python 3.14.7** with current FastAPI and Pydantic 2.12 or newer (first release supporting 3.14). Keep `Annotated[...]` for dependencies and discriminated unions because FastAPI and Pydantic read it at runtime.
+
 ## Structure
 
 ```

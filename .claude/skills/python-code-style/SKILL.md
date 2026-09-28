@@ -7,6 +7,20 @@ description: Enforces the project Python code style (PEP 8, docstring only docum
 
 Simple, laconic, human readable code. PEP 8 is the base for formatting.
 
+## Python version
+
+Target **Python 3.14.7**. Set `requires-python = ">=3.14"` in `pyproject.toml` and `target-version = "py314"` for ruff.
+
+Use modern syntax:
+
+1. `X | None` and builtin generics `list[float]`, `dict[str, Task]`. Never `Optional`, `List`, `Dict`.
+2. Annotations are evaluated lazily (PEP 649). Do not add `from __future__ import annotations` and do not quote forward references.
+3. `type` statement for aliases: `type Samples = list[float]`.
+4. PEP 695 generics: `class Registry[ItemType]:` and `def find_first[ItemType](items: list[ItemType]) -> ItemType:`, no `TypeVar`.
+5. `match` statement when choosing between several named variants.
+6. `except ValueError, TypeError:` without parentheses is allowed (PEP 758) but only when `except` is unavoidable.
+7. `typing.Self`, `typing.override` for methods returning the instance or overriding a base.
+
 ## Rules
 
 1. **No comments in code.** The only allowed documentation is a docstring.
