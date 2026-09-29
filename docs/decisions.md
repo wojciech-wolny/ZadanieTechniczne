@@ -21,7 +21,7 @@
 1. Text input tokens are separated by any whitespace. Invalid or non-finite tokens are skipped with a warning; the Producer does not stop. A token is limited to 1 KiB so malformed input cannot grow the carry buffer without bound.
 2. A binary file whose size is not a multiple of 4 has its trailing bytes ignored with a warning.
 3. A complete file pass that yields no valid samples is an error. This covers empty, whitespace-only, all-invalid and binary files shorter than four bytes.
-4. `rate` is a finite positive number of samples per second; there is no "as fast as possible" mode. `limit` defaults to 0 and counts successfully parsed samples sent over TCP.
+4. `rate` is a finite number of samples per second from 0.1 to 1_000_000, so a sample arrives at least every 10 s, within the default `PRODUCER_IDLE_SECONDS`. There is no "as fast as possible" mode. `limit` defaults to 0 and counts successfully parsed samples sent over TCP.
 5. The Producer skips non-finite file values. The server also closes a custom Producer connection that sends NaN or infinity, keeping algorithm statistics JSON-safe.
 6. Rounding for ASCII uses Python `round` (banker's rounding). `65.5` becomes `B`, `66.5` also becomes `B`; this only matters on exact halves.
 7. Task activation and removal follow the serialized dispatch boundary defined in [architecture.md](architecture.md).

@@ -1,12 +1,12 @@
 # REST API
 
-Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). Interactive docs stay at `/docs`. A later API version adds a new prefix and leaves these paths unchanged.
+Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). Interactive docs stay at `/docs` unless `DOCS_ENABLED` is `false`. A later API version adds a new prefix and leaves these paths unchanged.
 
 ## Endpoints
 
 | Method | Path | Request | Response | Status |
 |--------|------|---------|----------|--------|
-| POST | `/api/v1/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached |
+| POST | `/api/v1/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached, 413 when the body is too large |
 | GET | `/api/v1/tasks` | | `list[TaskRead]` | 200 |
 | GET | `/api/v1/tasks/{task_id}` | | `TaskRead` | 200, 404 |
 | DELETE | `/api/v1/tasks/{task_id}` | | empty | 204, 404 |
@@ -57,7 +57,7 @@ class StreamRead(BaseModel):
     samples_received: int
 ```
 
-`window_size` is the parameter `N` from the task. Unknown algorithm or sink names and invalid sizes are rejected with 422 by Pydantic. A new component requires a configuration model and registry entry so it is represented explicitly in generated OpenAPI.
+`window_size` is the parameter `N` from the task. Unknown algorithm or sink names, invalid sizes and unknown fields (`extra="forbid"`) are rejected with 422 by Pydantic. A new component requires a configuration model and registry entry so it is represented explicitly in generated OpenAPI.
 
 Task IDs are UUID4 values serialized as lowercase strings. `created_at` is an
 RFC 3339 UTC timestamp. `GET /api/v1/tasks` returns tasks in creation order.
@@ -104,7 +104,8 @@ Client errors use FastAPI's `{"detail": ...}` shape:
 |--------|--------|
 | 404 | `"Task not found"` |
 | 409 | `"Task limit reached"` |
-| 422 | Pydantic validation details |
+| 413 | `"Request body too large"`, for any request body above 16384 bytes |
+| 422 | Pydantic validation details, including a `window_size` that is not a JSON integer |
 
 An algorithm or sink exception changes that task to `failed`; the task remains in GET
 responses until deleted. `error` contains a short message without a traceback or

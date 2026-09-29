@@ -8,13 +8,13 @@ One workflow `.github/workflows/ci.yml`, one job `check`, triggered on push and 
 
 | Step | Command | Fails when |
 |------|---------|------------|
-| Checkout | `actions/checkout@v4` | |
+| Checkout | `actions/checkout@v4` with `persist-credentials: false` | |
 | Install uv | `astral-sh/setup-uv@v6` | |
 | Install | `uv sync --locked` | `uv.lock` is out of date or a dependency is missing |
 | Lint | `uv run ruff check .` | style or error rule violated |
 | Format | `uv run ruff format --check .` | code not formatted |
 | Test | `uv run pytest -q` | any unit, integration or system test fails |
-| Audit | `uv run --with pip-audit pip-audit` | a dependency has a known vulnerability |
+| Audit | `uv run --with "pip-audit==2.*" pip-audit` | a dependency has a known vulnerability |
 
 Every step after installing `uv` is the same command a developer runs locally, so a red pipeline is reproducible by hand.
 
@@ -29,3 +29,5 @@ Every step after installing `uv` is the same command a developer runs locally, s
    same-repository pull requests.
 5. **No Docker in the pipeline.** Tests run as plain processes.
 6. **No deployment or release job.** Out of scope for the task.
+7. **No stored checkout token.** `persist-credentials: false` keeps the job token out of `.git/config` on the persistent runner.
+8. **Pinned audit tool.** `pip-audit` is pinned to major version 2, so a new major cannot change the audit silently. It audits the installed environment, including dev tools.

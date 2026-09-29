@@ -28,7 +28,7 @@ samples = struct.iter_unpack("<d", data[:complete])
 remainder = data[complete:]
 ```
 
-This makes results independent of packet and read sizes (STR-1, STR-2). On disconnect a non empty remainder is discarded and logged as a truncated sample. A decoded NaN or infinity is a protocol error: the server logs it and closes that connection before dispatching the containing batch.
+This makes results independent of packet and read sizes (STR-1, STR-2). On disconnect a non empty remainder is discarded and logged as a truncated sample. A decoded NaN or infinity is a protocol error: the server dispatches the finite samples decoded before it, logs the error and closes that connection. The same samples reach tasks for any read size.
 
 ## Connection rules
 

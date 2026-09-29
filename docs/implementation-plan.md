@@ -67,7 +67,7 @@ Each stage ends with passing tests, a commit and a green CI run. Stages 0 to 6 a
 
 ## Stage 7: security review
 
-Run the `security` agent over the whole code base and the workflow files and fix findings rated medium or higher.
+Run the `security` agent over the whole code base and the workflow files and fix findings rated medium or higher. Findings and the ordered plan are in [hardening.md](hardening.md).
 
 ## Stage 8: optional extras
 

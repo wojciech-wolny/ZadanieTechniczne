@@ -41,9 +41,8 @@ Follows the `istqb-testing` skill. Every test docstring starts with the requirem
 
 The oracles hold only when the task starts at the first sample of the file, so system tests create tasks before the Producer connects.
 
-The binary example mentioned in the task is absent from this checkout. Binary-reader
-tests create temporary little endian float32 files instead of depending on that
-optional fixture.
+Unit tests create temporary little endian float32 files for chunk boundaries. The
+system test also decodes `wytyczne/example_binary.f32`.
 
 ## Rules
 
