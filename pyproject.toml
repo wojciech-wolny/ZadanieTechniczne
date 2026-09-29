@@ -1,0 +1,51 @@
+[project]
+name = "zadanie-techniczne"
+version = "0.1.0"
+description = "Streaming sample producer and processing server"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141",
+    "h11>=0.16",
+    "pydantic-settings>=2.15",
+    "uvicorn>=0.54",
+]
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "pytest>=8.4",
+    "ruff",
+]
+
+[project.scripts]
+producer = "producer.__main__:main"
+processing-server = "server.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src/common", "src/producer", "src/server"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/common" = "common"
+"src/producer" = "producer"
+"src/server" = "server"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py313"
+src = ["src", "tests", "scripts"]
+extend-exclude = [".claude"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["common", "producer", "server", "tests"]

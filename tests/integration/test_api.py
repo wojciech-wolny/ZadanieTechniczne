@@ -1,0 +1,308 @@
+"""Integration tests for the task REST API."""
+
+import uuid
+from datetime import datetime
+
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
+
+from server.main import create_app
+from server.middleware import MAX_REQUEST_BYTES
+
+
+def test_create_task_returns_created_task(client: TestClient) -> None:
+    """Verify API-1, TSK-1 and TSK-3: creating a task returns configuration and state."""
+    response = client.post(
+        "/api/v1/tasks",
+        json={"algorithm": {"name": "average", "window_size": 6}, "sink": "stdout"},
+    )
+
+    body = response.json()
+    assert response.status_code == status.HTTP_201_CREATED
+    uuid.UUID(body["task_id"])
+    assert body["algorithm"] == {"name": "average", "window_size": 6}
+    assert body["sink"] == "stdout"
+    assert body["status"] == "running"
+    assert body["error"] is None
+    assert body["statistics"] == {
+        "samples_processed": 0,
+        "windows_processed": 0,
+        "last_result": None,
+    }
+    created_at = datetime.fromisoformat(body["created_at"])
+    assert created_at.tzinfo is not None
+
+
+def test_create_task_defaults_sink_to_null(client: TestClient) -> None:
+    """Verify OUT-2 and TSK-4: a passthrough task defaults to a null sink."""
+    response = client.post("/api/v1/tasks", json={"algorithm": {"name": "passthrough"}})
+
+    body = response.json()
+    assert response.status_code == status.HTTP_201_CREATED
+    assert body["sink"] == "null"
+    assert body["statistics"] == {"samples_processed": 0}
+
+
+def test_list_tasks_returns_creation_order(client: TestClient) -> None:
+    """Verify API-2: listing tasks follows creation order."""
+    first = client.post(
+        "/api/v1/tasks",
+        json={"algorithm": {"name": "passthrough"}},
+    ).json()["task_id"]
+    second = client.post(
+        "/api/v1/tasks",
+        json={"algorithm": {"name": "linear_regression", "window_size": 2}},
+    ).json()["task_id"]
+
+    response = client.get("/api/v1/tasks")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert [item["task_id"] for item in response.json()] == [first, second]
+    assert response.json()[1]["statistics"]["last_slope"] is None
+
+
+def test_read_task_returns_the_created_task(client: TestClient) -> None:
+    """Verify API-3: reading a task returns its configuration and statistics."""
+    created = client.post(
+        "/api/v1/tasks",
+        json={"algorithm": {"name": "passthrough"}, "sink": "null"},
+    ).json()
+
+    response = client.get(f"/api/v1/tasks/{created['task_id']}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["task_id"] == created["task_id"]
+    assert response.json()["status"] == "running"
+
+
+def test_read_task_unknown_id_returns_not_found(client: TestClient) -> None:
+    """Verify API-3: a missing task returns 404."""
+    response = client.get("/api/v1/tasks/missing")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Task not found"
+
+
+def test_delete_task_removes_it(client: TestClient) -> None:
+    """Verify API-4: deleting a task removes it from the collection."""
+    task_id = client.post(
+        "/api/v1/tasks",
+        json={"algorithm": {"name": "passthrough"}},
+    ).json()["task_id"]
+
+    deleted = client.delete(f"/api/v1/tasks/{task_id}")
+    listing = client.get("/api/v1/tasks")
+    missing = client.get(f"/api/v1/tasks/{task_id}")
+
+    assert deleted.status_code == status.HTTP_204_NO_CONTENT
+    assert deleted.content == b""
+    assert listing.json() == []
+    assert missing.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_task_unknown_id_returns_not_found(client: TestClient) -> None:
+    """Verify API-4: deleting a missing task returns 404."""
+    response = client.delete("/api/v1/tasks/missing")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Task not found"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"algorithm": {"name": "average", "window_size": 0}},
+        {"algorithm": {"name": "average", "window_size": 100001}},
+        {"algorithm": {"name": "linear_regression", "window_size": 1}},
+        {"algorithm": {"name": "linear_regression", "window_size": 100001}},
+        {"algorithm": {"name": "missing"}},
+        {"algorithm": {"name": "passthrough"}, "sink": "file"},
+        {"algorithm": {"name": "passthrough"}, "sinks": "stdout"},
+        {"algorithm": {"name": "passthrough", "window_size": 5}},
+        {"algorithm": {"name": "average", "window_size": 6, "N": 3}},
+        {"algorithm": {"name": "average", "window_size": "6"}},
+        {"algorithm": {"name": "average", "window_size": 6.0}},
+        {"algorithm": {"name": "average", "window_size": True}},
+        {"algorithm": {"name": "linear_regression", "window_size": "6"}},
+    ],
+    ids=[
+        "average_below",
+        "average_above",
+        "regression_below",
+        "regression_above",
+        "unknown_algorithm",
+        "unknown_sink",
+        "misspelled_task_field",
+        "passthrough_with_parameter",
+        "unknown_algorithm_field",
+        "average_text_size",
+        "average_float_size",
+        "average_bool_size",
+        "regression_text_size",
+    ],
+)
+def test_create_task_rejects_invalid_configuration(
+    client: TestClient,
+    payload: dict,
+) -> None:
+    """Verify API-5, ALG-4 and H7: invalid algorithms, sinks, sizes and field types return 422."""
+    response = client.post("/api/v1/tasks", json=payload)
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        {"name": "average", "window_size": 1},
+        {"name": "average", "window_size": 100000},
+        {"name": "linear_regression", "window_size": 2},
+        {"name": "linear_regression", "window_size": 100000},
+    ],
+    ids=["average_min", "average_max", "regression_min", "regression_max"],
+)
+def test_create_task_accepts_window_boundaries(client: TestClient, algorithm: dict) -> None:
+    """Verify API-5: window sizes on the accepted boundary create a task."""
+    response = client.post("/api/v1/tasks", json={"algorithm": algorithm, "sink": "null"})
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_task_when_full_returns_conflict(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify API-1: a full registry returns 409."""
+    monkeypatch.setenv("TCP_PORT", "0")
+    monkeypatch.setenv("MAX_TASKS", "1")
+    with TestClient(create_app()) as client:
+        first = client.post("/api/v1/tasks", json={"algorithm": {"name": "passthrough"}})
+        second = client.post("/api/v1/tasks", json={"algorithm": {"name": "passthrough"}})
+
+    assert first.status_code == status.HTTP_201_CREATED
+    assert second.status_code == status.HTTP_409_CONFLICT
+    assert second.json()["detail"] == "Task limit reached"
+
+
+def test_routes_live_under_api_v1(client: TestClient) -> None:
+    """Verify API-6: task routes are served only under the version prefix."""
+    unversioned = client.get("/tasks")
+    versioned = client.get("/api/v1/tasks")
+
+    assert unversioned.status_code == status.HTTP_404_NOT_FOUND
+    assert versioned.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
+def test_docs_are_served_by_default(client: TestClient, path: str) -> None:
+    """Verify API-6 and H10: the interactive docs and schema are served by default."""
+    response = client.get(path)
+
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify API-6 and H10: with docs disabled the docs return 404 and the API still works."""
+    monkeypatch.setenv("TCP_PORT", "0")
+    monkeypatch.setenv("DOCS_ENABLED", "false")
+    with TestClient(create_app()) as client:
+        docs = client.get("/docs")
+        redoc = client.get("/redoc")
+        schema = client.get("/openapi.json")
+        tasks = client.get("/api/v1/tasks")
+
+    assert docs.status_code == status.HTTP_404_NOT_FOUND
+    assert redoc.status_code == status.HTTP_404_NOT_FOUND
+    assert schema.status_code == status.HTTP_404_NOT_FOUND
+    assert tasks.status_code == status.HTTP_200_OK
+
+
+def pad_task_body(size: int) -> bytes:
+    """Return a valid passthrough task body padded with spaces to the given size.
+
+    :param size: total body length in bytes
+    :return: JSON request body
+    """
+    body = b'{"algorithm": {"name": "passthrough"}}'
+    return body + b" " * (size - len(body))
+
+
+def test_create_task_body_at_size_limit_is_created(client: TestClient) -> None:
+    """Verify SRV-9 and H1: a valid body of exactly the size limit still creates a task."""
+    response = client.post(
+        "/api/v1/tasks",
+        content=pad_task_body(MAX_REQUEST_BYTES),
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "size",
+    [MAX_REQUEST_BYTES + 1, 17 * 1024],
+    ids=["one_above_limit", "17_kib"],
+)
+def test_create_task_body_above_size_limit_returns_413(client: TestClient, size: int) -> None:
+    """Verify SRV-9 and H1: a declared body above the size limit returns 413."""
+    response = client.post(
+        "/api/v1/tasks",
+        content=pad_task_body(size),
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+    assert response.json() == {"detail": "Request body too large"}
+    assert client.get("/api/v1/tasks").json() == []
+
+
+@pytest.mark.parametrize(
+    "declared_length",
+    ["16385", "9" * 5000, "0" * 5000 + "16385"],
+    ids=["one_above_limit", "beyond_int_digits", "leading_zeros"],
+)
+def test_create_task_declared_length_above_limit_returns_413(
+    client: TestClient,
+    declared_length: str,
+) -> None:
+    """Verify SRV-9 and H1: a declared length above the limit returns 413 without parsing it."""
+    response = client.post(
+        "/api/v1/tasks",
+        content=b"{}",
+        headers={"content-type": "application/json", "content-length": declared_length},
+    )
+
+    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+
+
+def test_create_task_streamed_body_above_size_limit_returns_413(client: TestClient) -> None:
+    """Verify SRV-9 and H1: a body without Content Length that exceeds the limit returns 413."""
+    chunks = iter([b" " * 8192, b" " * 8192, b" "])
+
+    response = client.post(
+        "/api/v1/tasks",
+        content=chunks,
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+    assert response.json() == {"detail": "Request body too large"}
+
+
+def test_create_task_streamed_body_within_size_limit_is_created(client: TestClient) -> None:
+    """Verify SRV-9 and H1: a body without Content Length within the limit creates a task."""
+    chunks = iter([b'{"algorithm": ', b'{"name": "passthrough"}}'])
+
+    response = client.post(
+        "/api/v1/tasks",
+        content=chunks,
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_read_stream_starts_idle(client: TestClient) -> None:
+    """Verify SRV-2 and SRV-5: the stream starts with no producer and no samples."""
+    response = client.get("/api/v1/stream")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"producer_connected": False, "samples_received": 0}
