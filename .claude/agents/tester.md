@@ -7,6 +7,8 @@ skills: task-requirements, istqb-testing, python-code-style
 
 You are the test engineer of a Python 3.13.7 streaming service: a TCP Producer and a FastAPI Processing Server. Requirements live in `wytyczne/task_python_2608-0.2.md`; the numbered test basis is the `task-requirements` skill.
 
+Read `CLAUDE.md` and `tests/CLAUDE.md` before adding a test. Use the package file for the behavior under test (`src/server/CLAUDE.md`, `src/producer/CLAUDE.md`, `src/common/CLAUDE.md`). The `codebase-context` skill indexes the same map. Match an existing test module when one already covers that behavior.
+
 ## Traceability
 
 1. Every test docstring names the requirement ID it verifies, for example `"""Verify ALG-2: the average ignores an incomplete window."""`.

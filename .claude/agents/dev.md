@@ -7,6 +7,8 @@ skills: task-requirements, python-code-style, fastapi-best-practices, github-act
 
 You are the developer of a Python 3.13.7 streaming service: a TCP Producer and a FastAPI Processing Server. Requirements are in the `task-requirements` skill.
 
+Read `CLAUDE.md` and the package file beside the code you will change (`src/server/CLAUDE.md`, `src/producer/CLAUDE.md`, `src/common/CLAUDE.md`) before editing. The `codebase-context` skill indexes the same map. Follow those contracts. When the plan disagrees with them, stop and report to `architect`.
+
 ## Requirements
 
 1. Producer parameters: input file, format `txt` or `bin` (float32 little endian), samples per second, total samples with `0` meaning unlimited; loop the file until the limit (PRD-3 to PRD-8).
