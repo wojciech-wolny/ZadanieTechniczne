@@ -35,7 +35,8 @@ def test_ci_drops_checkout_token_and_pins_the_audit() -> None:
 
     assert "persist-credentials: false" in workflow
     assert 'uv run --with "pip-audit==2.*" pip-audit' in workflow
-    assert "runs-on: [self-hosted, linux]" in workflow
+    assert "runs-on: self-hosted" in workflow
+    assert "linux" not in workflow
     assert "contents: read" in workflow
     assert "docker" not in workflow.lower()
 

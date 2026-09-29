@@ -48,7 +48,7 @@ You are the security reviewer of a Python 3.13.7 streaming service: a TCP Produc
 - [ ] No temporary files, no writes outside the project
 
 **CI pipeline**
-- [ ] Every job uses `runs-on: [self-hosted, linux]`
+- [ ] Every job uses `runs-on: self-hosted`
 - [ ] No job uses Docker
 - [ ] `permissions: contents: read` unless a job needs more
 - [ ] Pull requests from forks never run on the self-hosted runner

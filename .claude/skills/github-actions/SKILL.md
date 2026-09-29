@@ -5,15 +5,15 @@ description: Writes and reviews simple GitHub Actions workflows for this project
 
 # GitHub Actions
 
-Pipelines must be simple: one workflow, one job, a few readable steps. Every step must also work when run by hand on a developer machine.
+Pipelines must be simple: one workflow, parallel jobs, a few readable steps. Every step must also work when run by hand on a developer machine.
 
 ## Runner
 
-1. Always `runs-on: [self-hosted, linux]`. Never GitHub hosted labels such as `ubuntu-latest`.
+1. Always `runs-on: self-hosted` and no other label. Never GitHub hosted labels such as `ubuntu-latest`, and never an extra label such as `linux`.
 2. Runners may be ephemeral, so nothing beyond `git` can be assumed installed.
 3. Install `uv` inside the job with `astral-sh/setup-uv`; `uv` then provides Python from `.python-version`. No `actions/setup-python`.
 4. Commands are plain `uv` calls that behave the same in bash and PowerShell, so they also run on the Windows developer machine.
-5. Jobs may run in parallel: tests use free ports and temporary directories only.
+5. Lint, format, test, and audit are separate jobs with no `needs`, so they start together. Tests use free ports and temporary directories only, because several jobs may share one runner machine.
 
 ## Rules
 
@@ -54,23 +54,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  lint:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, linux]
+    runs-on: self-hosted
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
       - run: uv run ruff check .
+
+  format:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
       - run: uv run ruff format --check .
+
+  test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
       - run: uv run pytest -q
-      - run: uv run --with pip-audit pip-audit
+
+  audit:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run --with "pip-audit==2.*" pip-audit
 ```
 
 ## Checklist
 
-- [ ] `runs-on: [self-hosted, linux]` everywhere
+- [ ] `runs-on: self-hosted` everywhere
 - [ ] `uv` installed by `astral-sh/setup-uv`, not assumed on the runner
 - [ ] Read only permissions, concurrency, timeout
 - [ ] Fork pull requests skipped
