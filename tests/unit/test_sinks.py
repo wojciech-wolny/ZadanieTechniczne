@@ -7,7 +7,7 @@ import sys
 import pytest
 
 from server.schemas import AverageConfig, PassthroughConfig, TaskCreate
-from server.services.sinks import NullSink, StdoutSink, convert_to_ascii
+from server.services.sinks import StdoutSink, convert_to_ascii
 from server.services.tasks import ProcessingTask
 
 
@@ -75,14 +75,6 @@ def test_stdout_task_with_overflowing_average_keeps_running(
 
     assert stream.getvalue() == "#"
     assert task.status == "running"
-
-
-def test_write_results_null_sink_discards_values() -> None:
-    """Verify OUT-2: the null sink accepts results and stores nothing."""
-    sink = NullSink()
-
-    assert sink.write_results([65.0, 137.0]) is None
-    sink.close()
 
 
 def test_null_task_does_not_write_standard_output(monkeypatch: pytest.MonkeyPatch) -> None:

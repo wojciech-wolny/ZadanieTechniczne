@@ -82,13 +82,22 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: self-hosted
     timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
-      - run: uv run pytest -q
+      - run: uv run pytest -q --html=report.html --self-contained-html
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: report.html
+          if-no-files-found: warn
 
   audit:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -107,7 +116,7 @@ jobs:
 
 - [ ] `runs-on: self-hosted` everywhere
 - [ ] `uv` installed by `astral-sh/setup-uv`, not assumed on the runner
-- [ ] Read only permissions, concurrency, timeout
+- [ ] Read only permissions, plus `actions: write` only on the test job, concurrency, timeout
 - [ ] Fork pull requests skipped
 - [ ] Every step runnable locally with the same command
 - [ ] Workflow passes on the runner before merging

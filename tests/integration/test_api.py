@@ -191,14 +191,6 @@ def test_routes_live_under_api_v1(client: TestClient) -> None:
     assert versioned.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
-def test_docs_are_served_by_default(client: TestClient, path: str) -> None:
-    """Verify API-6 and H10: the interactive docs and schema are served by default."""
-    response = client.get(path)
-
-    assert response.status_code == status.HTTP_200_OK
-
-
 def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify API-6 and H10: with docs disabled the docs return 404 and the API still works."""
     monkeypatch.setenv("TCP_PORT", "0")

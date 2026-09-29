@@ -116,7 +116,7 @@ The Producer sends a raw stream of IEEE 754 float64 values, little endian (`stru
 ```powershell
 uv run ruff check .
 uv run ruff format --check .
-uv run pytest -q
+uv run pytest -q --html=report.html --self-contained-html
 ```
 
 The suite does not need a server you start yourself. Integration and system tests bind a free local port.

@@ -10,7 +10,7 @@ One workflow `.github/workflows/ci.yml`, triggered on push and pull request to `
 |-----|---------|------------|
 | `lint` | `uv run ruff check .` | style or error rule violated |
 | `format` | `uv run ruff format --check .` | code not formatted |
-| `test` | `uv run pytest -q` | any unit, integration or system test fails |
+| `test` | `uv run pytest -q --html=report.html --self-contained-html` | any unit, integration or system test fails |
 | `audit` | `uv run --with "pip-audit==2.*" pip-audit` | a dependency has a known vulnerability |
 
 Every step after installing `uv` is the same command a developer runs locally, so a red pipeline is reproducible by hand.
@@ -28,3 +28,4 @@ Every step after installing `uv` is the same command a developer runs locally, s
 6. **No deployment or release job.** Out of scope for the task.
 7. **No stored checkout token.** `persist-credentials: false` keeps the job token out of `.git/config` on the persistent runner.
 8. **Pinned audit tool.** `pip-audit` is pinned to major version 2, so a new major cannot change the audit silently. It audits the installed environment, including dev tools.
+9. **HTML test report.** The test job writes one self contained `report.html` and uploads it as the `test-report` artifact, including when tests fail. The test job grants `actions: write` for that upload. Open the artifact from the workflow run and open `report.html` in a browser.

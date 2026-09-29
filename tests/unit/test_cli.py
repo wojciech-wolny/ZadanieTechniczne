@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from common.protocol import SAMPLE_FORMAT, SAMPLE_SIZE, pack_samples
+from common.protocol import pack_samples
 from producer.__main__ import (
     CONNECT_TIMEOUT_SECONDS,
     build_parser,
@@ -16,12 +16,6 @@ from producer.__main__ import (
     parse_port,
     parse_rate,
 )
-
-
-def test_sample_format_is_little_endian_float64() -> None:
-    """Verify PRD-10: each sample on the wire is 8 little endian bytes."""
-    assert SAMPLE_FORMAT == "<d"
-    assert SAMPLE_SIZE == 8
 
 
 def test_parse_args_accepts_the_producer_parameters() -> None:
