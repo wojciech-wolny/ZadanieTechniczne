@@ -18,7 +18,7 @@ Read `CLAUDE.md` at the repository root first. Then read only the package file f
 | Wire format `<d` and default hosts | `src/common/CLAUDE.md` |
 | pytest layout and requirement IDs | `tests/CLAUDE.md` |
 
-Those files are the current contracts. `docs/architecture.md` and `docs/decisions.md` explain why. The `task-requirements` skill is the numbered requirement list.
+Those files are the current contracts. `docs/architecture.md` and `docs/decisions.md` explain why. The `task-requirements` skill is the numbered requirement list. The `crucial-information` skill says what belongs in the README, in `docs/`, and in these model files.
 
 ## Fast facts
 

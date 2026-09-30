@@ -22,6 +22,8 @@ A failed connection, or a file pass that yields no finite samples, exits with st
 
 `SAMPLE_READERS[format](path)` yields samples. `repeat_samples` reopens the file after each pass. `limit_samples` stops after `limit` yielded samples when `limit > 0`. `send_samples` groups them into about 20 ms batches, writes `pack_samples` bytes, and paces with `time.monotonic` deadlines. The first batch is sent immediately. When the schedule is already late, the next batch is sent immediately.
 
+Text chunk state is one `TextReadState`: the unfinished token, whether an overlong token continues, and the skip count for the pass. Pacing state is one `SendSchedule`: rate, start time, and samples already sent. Do not pass those fields as a loose argument list.
+
 ## File formats
 
 These are input formats. They are different from the TCP format.

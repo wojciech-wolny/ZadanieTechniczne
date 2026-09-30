@@ -31,7 +31,7 @@ Use this file when changing anything under `src/server/`. The repository map is 
 | `find_task` | Returns the task, or `None` when the id is absent. The API turns `None` into 404. |
 | `list_tasks` | Oldest to newest, including `failed`. |
 | `remove_task` | Pops the task, then `close_sink`. Unknown id returns `None`. |
-| `dispatch` | Copies tasks whose `status == "running"` first. Then calls `process_samples` on that copy. A task created during this call waits for the next dispatch. |
+| `dispatch` | Copies tasks whose `status == "running"` first. Then calls `process_samples` on that copy. A task created during this call waits for the next dispatch. The copy, the per task call, and the sink close are separate methods. |
 
 On `process_samples` failure, `dispatch` calls `record_failure(type(error).__name__)` and `close_sink`. A sink close error is logged and does not stop the remaining tasks. The stored error is the exception class name, with no traceback.
 

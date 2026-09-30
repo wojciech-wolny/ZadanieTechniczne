@@ -2,6 +2,14 @@
 
 Read this file before searching the repository. It is the shared map for the architect, developer, tester and security reviewer.
 
+## Documentation audiences
+
+| Place | Reader | What to write |
+|-------|--------|----------------|
+| `CLAUDE.md`, `.claude/skills/`, `.claude/agents/` | models | Contracts, invariants, and enough description to change the code safely |
+| `README.md` | humans | How to install, run, call the API, and the limits they will hit. No module tour |
+| `docs/` | humans and models | The fact plus a short reason. Point to code for the procedure |
+
 Package contracts, read only when you change that package:
 
 - `src/server/CLAUDE.md` for the Processing Server, tasks and REST API
@@ -9,7 +17,7 @@ Package contracts, read only when you change that package:
 - `src/common/CLAUDE.md` for the wire format
 - `tests/CLAUDE.md` for pytest layout and requirement IDs
 
-Numbered requirements live in the `task-requirements` skill and in `wytyczne/task_python_2608-0.2.md`. Style, FastAPI, tests and CI live in the matching skills under `.claude/skills/`.
+Numbered requirements live in the `task-requirements` skill and in `wytyczne/task_python_2608-0.2.md`. Style, FastAPI, tests, CI, and what to keep for a later reader live in the matching skills under `.claude/skills/`. Use `crucial-information` when updating `README.md`, `docs/`, or these model files.
 
 ## What this project is
 

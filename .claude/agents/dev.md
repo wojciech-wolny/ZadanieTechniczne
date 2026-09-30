@@ -2,7 +2,7 @@
 name: dev
 description: Python and FastAPI developer. Implements features from the architect plan in simple, laconic, typed code. Use when writing or changing application code for the Producer or Processing Server.
 tools: Read, Grep, Glob, Write, Edit, Bash
-skills: task-requirements, python-code-style, fastapi-best-practices, github-actions
+skills: task-requirements, python-code-style, fastapi-best-practices, github-actions, crucial-information
 ---
 
 You are the developer of a Python 3.13.7 streaming service: a TCP Producer and a FastAPI Processing Server. Requirements are in the `task-requirements` skill.

@@ -36,8 +36,7 @@ These environment variables override the defaults. Both applications bind to loc
 | `TCP_HOST` | `127.0.0.1` | TCP bind address, must not be empty |
 | `TCP_PORT` | `9000` | TCP port |
 | `MAX_TASKS` | `32` | Maximum tasks kept at once, at least 1 |
-| `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed, above 0. Keep it above 10 so a Producer at `--rate 0.1` stays connected |
-A full window of 100000 samples takes about 3.2 MB, so the default 32 tasks take about 100 MB at most.
+| `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed. Above 0. Use more than 10 with `--rate 0.1` |
 
 Stdout task output is written to the server process, so watch that terminal.
 
@@ -56,13 +55,13 @@ uv run producer wytyczne/passthrough.txt --format txt --rate 1000
 | `--host` | Processing Server host | `127.0.0.1` |
 | `--port` | Processing Server TCP port | `9000` |
 
-`txt` files contain whitespace separated numbers. `bin` files contain little endian float32 values (4 bytes each). The Producer reads the file in chunks, reopens it after each pass, and stops after `--limit` samples when the limit is greater than 0. Press Ctrl+C to stop an unlimited stream. A failed connection or a file that contains no samples exits with status 1.
+`txt` is whitespace separated numbers. `bin` is little endian float32, 4 bytes each. `--limit 0` repeats the file until Ctrl+C. A failed connection or a file with no samples exits with status 1.
 
 Create a stdout task before starting the Producer if you want to see the decoded text. With the command above and a passthrough stdout task, the server prints `Passthrough - It works! ` and then repeats it.
 
 ## REST API
 
-Every resource is under `/api/v1`. A later incompatible API would use a new prefix. `/docs` and `/openapi.json` stay unversioned.
+Resources are under `/api/v1`. `/docs` is the interactive reference.
 
 | Method | Path | Success | Other |
 |--------|------|---------|-------|
@@ -107,7 +106,7 @@ The `null` sink discards results. The `stdout` sink rounds each result with Pyth
 
 ## TCP format
 
-The Producer sends a raw stream of IEEE 754 float64 values, little endian (`struct` format `<d`, 8 bytes), with no header and no delimiter. The server reassembles samples from whatever chunk sizes TCP delivers. A partial trailing sample is discarded when the connection closes. NaN or infinity closes that connection after the finite samples before it are processed. The next Producer continues the same logical stream, including a window that was only partly filled. Details are in [docs/wire-protocol.md](docs/wire-protocol.md).
+Samples on the wire are little endian float64, 8 bytes, with no header. A partial sample at disconnect is dropped. NaN or infinity closes that connection. The next Producer continues the same stream, including a partial window. Details: [docs/wire-protocol.md](docs/wire-protocol.md).
 
 ## Tests
 
@@ -139,11 +138,11 @@ Other characters in the same output are noise from the rest of the file. That is
 
 ## Assumptions
 
-1. Text tokens are split on any whitespace. A token that is not a finite number is skipped. A token longer than 1024 characters is skipped so a broken file cannot grow memory without a bound. Each file pass logs one warning to stderr with the number of skipped tokens.
-2. A binary file whose length is not a multiple of 4 bytes ignores the trailing bytes, with a warning. Non finite float32 values are skipped with one summary warning per pass.
-3. If a full pass over the file yields no samples, the Producer stops with an error. This covers an empty file, a whitespace only file, a file of invalid tokens, and a binary file shorter than 4 bytes.
-4. `rate` has no "as fast as possible" setting. The Producer sends the first batch immediately, then uses a monotonic clock. About 20 ms of samples are sent together. If the process falls behind, it sends immediately instead of accumulating delay.
-5. The Producer does not reconnect and gives up connecting after 5 seconds. The server keeps running after a disconnect and accepts another Producer. A Producer that sends nothing for `PRODUCER_IDLE_SECONDS` is disconnected. A rejected second Producer is logged as a warning.
+1. Text tokens are split on whitespace. Invalid, non finite, and tokens longer than 1024 characters are skipped. One warning per file pass.
+2. A binary tail shorter than 4 bytes is ignored. Non finite float32 values are skipped. One warning per pass.
+3. A full pass with no samples stops the Producer with status 1.
+4. There is no unlimited rate. The first batch is immediate. Later batches follow the rate. A late batch is sent at once.
+5. The Producer does not reconnect. Connect timeout is 5 seconds. The server stays up after disconnect. A silent Producer is dropped after `PRODUCER_IDLE_SECONDS`. A second Producer is rejected.
 6. ASCII rounding is bankers rounding. `65.5` becomes `B`, and `66.5` also becomes `B`.
 7. A task is included in the next sample batch after creation. It never joins a batch that is already being processed, and samples from before creation are not replayed.
 8. Deleting a task closes its sink. There is no paused state.

@@ -1,8 +1,9 @@
 # Design documentation
 
 Design for the solution of `wytyczne/task_python_2608-0.2.md`. These documents
-describe the behavior implemented in `src/`. Requirement IDs (PRD, SRV, STR, TSK,
-ALG, OUT, API, DLV) come from the `task-requirements` skill.
+state the behavior in `src/` and a short reason for it. Command recipes stay in
+the root `README.md`. Requirement IDs (PRD, SRV, STR, TSK, ALG, OUT, API, DLV)
+come from the `task-requirements` skill.
 
 | Document | Content |
 |----------|---------|

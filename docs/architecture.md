@@ -62,7 +62,7 @@ scripts/
     demo.py                starts server, creates tasks, runs producer
 ```
 
-`services/` never imports FastAPI. The wire format constant (`struct` format `<d`) lives in one shared module `src/common/protocol.py` used by both applications.
+`services/` never imports FastAPI. The TCP format `<d` lives only in `src/common/protocol.py`, because both processes must agree on it. Producer file limits and the float32 layout `<f` live in `src/producer/constants.py`, so a file read cannot reuse the wire format by accident. `MAX_WINDOW_SIZE` stays in `src/server/schemas.py`: it is the request limit, not an operator setting.
 
 ## Interfaces
 
