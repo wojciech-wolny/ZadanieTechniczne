@@ -151,6 +151,8 @@ Other characters in the same output are noise from the rest of the file. That is
 8. Deleting a task closes its sink. There is no paused state.
 9. Task identifiers are server generated UUID4 strings. `created_at` is an RFC 3339 UTC timestamp.
 10. Finite samples can still produce an infinite result, for example the average of `1e308` and `1e308`. JSON has no infinity, so such a statistic is reported as `null` even though `windows_processed` has increased.
+11. A failed task keeps its place toward `MAX_TASKS` until it is deleted.
+12. A text file may start with a UTF-8 byte order mark. It is ignored.
 
 ## Design decisions
 
@@ -168,6 +170,7 @@ The longer form is in [docs/decisions.md](docs/decisions.md) and [docs/architect
 |------------|-------------------|
 | Tasks and partial windows live in memory and disappear on restart | Store task configuration and recreate it at startup |
 | A slow or blocked stdout sink stalls every task and the Producer | Give each task a bounded queue and an overflow policy |
+| One Python event loop processes every task, so the server can be slower than `--rate`. With the null sink, one passthrough task handled about 13.8 million samples per second, one regression task with `window_size` 100 about 4 million, and 32 such tasks about 0.12 million. The Producer then slows down through TCP backpressure, and each 64 KiB read holds the loop for up to about 66 ms | Keep the task count low for high rates, update regression with running sums, or move tasks to worker processes |
 | There is no stop without removal, and no restart of a failed task | Add status transitions and `PATCH /api/v1/tasks/{id}` |
 | Only one Producer can be connected | Map connections to named streams and let a task subscribe |
 | Bytes of a sample split by disconnect are dropped | Frame samples with sequence numbers if that loss matters |

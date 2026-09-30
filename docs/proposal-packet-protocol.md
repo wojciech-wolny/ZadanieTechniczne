@@ -1,6 +1,6 @@
 # Proposal: packet based wire protocol
 
-Status: **proposed**, not yet accepted. Alternative to the raw sample stream in [wire-protocol.md](wire-protocol.md).
+Status: **deferred**, see decision 14 in [decisions.md](decisions.md). The implementation uses the raw sample stream in [wire-protocol.md](wire-protocol.md).
 
 ## Problem
 
@@ -89,4 +89,4 @@ The buffer never exceeds one maximum packet plus one read. Results stay independ
 
 ## Recommendation
 
-Adopt it. It costs little, maps directly to "properly handle client disconnections" (SRV-6), rejects garbage input, and gives a versioned format that can grow with the microservice path. If accepted, `wire-protocol.md` is replaced by this document and `decisions.md` decision 2 is updated.
+Adopt it when a clean end of stream must differ from a crash, or when the format has to evolve. It costs little, rejects garbage input, and gives a versioned format. Until then the raw stream meets every requirement (SRV-6 is met by keeping the server running and keeping windows). If adopted, `wire-protocol.md` is replaced by this document and `decisions.md` decision 2 is updated.

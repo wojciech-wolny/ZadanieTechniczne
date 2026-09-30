@@ -15,6 +15,7 @@
 11. **Python 3.13.7.** The task requires 3.10 or newer; 3.13.7 is the newest interpreter available. `requires-python = ">=3.13"` and ruff `target-version = "py313"`.
 12. **Task failures are isolated.** An algorithm or sink exception marks only that task as failed. Its safe error summary is exposed by the API, and other tasks continue receiving samples.
 13. **Path versioning.** REST resources use the prefix `/api/v1` (API-6). The next incompatible contract is `/api/v2`. `/docs` and `/openapi.json` stay unversioned.
+14. **Raw stream kept, packet protocol deferred.** [proposal-packet-protocol.md](proposal-packet-protocol.md) would let the server tell a clean end from a crash and reject foreign clients. The task needs neither: one trusted Producer, and a disconnect is handled the same way either way. The proposal stays as the next step if the format has to evolve.
 
 ## Assumptions
 
@@ -38,4 +39,5 @@
 | One Producer only | Map connections to named streams and let tasks subscribe to a stream |
 | Samples in a disconnect remainder are lost | Framing with sequence numbers if exactness across reconnects matters |
 | stdout output of many tasks interleaves | File or WebSocket sink per task |
+| Processing speed is bounded by one Python event loop, about 0.12 million samples per second with 32 regression tasks | Fewer tasks at high rates, running sums for regression, or worker processes |
 | A blocked stdout sink stalls all stream processing | Move each sink behind a bounded queue with an explicit overflow policy |

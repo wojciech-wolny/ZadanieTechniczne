@@ -108,8 +108,8 @@ Client errors use FastAPI's `{"detail": ...}` shape:
 | 422 | Pydantic validation details, including a `window_size` that is not a JSON integer |
 
 An algorithm or sink exception changes that task to `failed`; the task remains in GET
-responses until deleted. `error` contains a short message without a traceback or
-internal path.
+responses until deleted. `error` contains only the exception class name, with no message,
+traceback or internal path. A failed task still counts toward the task limit until it is deleted.
 
 `/api/v1/stream` field `samples_received` counts finite samples accepted since server startup and
 does not reset when a Producer disconnects.
