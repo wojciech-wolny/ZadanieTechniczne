@@ -35,11 +35,11 @@ These environment variables override the defaults. Both applications bind to loc
 | `HTTP_PORT` | `8000` | HTTP port |
 | `TCP_HOST` | `127.0.0.1` | TCP bind address, must not be empty |
 | `TCP_PORT` | `9000` | TCP port |
-| `MAX_TASKS` | `32` | Maximum tasks kept at once, from 1 to 256 |
-| `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed. Finite, above 0, at most 3600. Keep it above 10 so a Producer at `--rate 0.1` stays connected |
+| `MAX_TASKS` | `32` | Maximum tasks kept at once, at least 1 |
+| `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed, above 0. Keep it above 10 so a Producer at `--rate 0.1` stays connected |
 | `DOCS_ENABLED` | `true` | Serve `/docs`, `/redoc` and `/openapi.json`. Set `false` to hide them |
 
-A full window of 100000 samples takes about 3.2 MB, so 256 full tasks take about 820 MB and the default 32 take about 100 MB. HTTP request bodies above 16384 bytes are rejected with 413, and uvicorn accepts at most 64 concurrent connections.
+A full window of 100000 samples takes about 3.2 MB, so the default 32 tasks take about 100 MB at most. HTTP request bodies above 16384 bytes are rejected with 413, and uvicorn accepts at most 64 concurrent connections.
 
 Stdout task output is written to the server process, so watch that terminal.
 
@@ -54,7 +54,7 @@ uv run producer wytyczne/passthrough.txt --format txt --rate 1000
 | `input_file` | Path of the input file | required |
 | `--format` | `txt` or `bin` | `txt` |
 | `--rate` | Samples per second. Finite, from `0.1` to `1000000` | required |
-| `--limit` | Samples to send, at most `sys.maxsize`. `0` repeats the file until you stop the process | `0` |
+| `--limit` | Samples to send. `0` repeats the file until you stop the process | `0` |
 | `--host` | Processing Server host | `127.0.0.1` |
 | `--port` | Processing Server TCP port | `9000` |
 

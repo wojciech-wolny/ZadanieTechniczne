@@ -11,9 +11,7 @@ from common.protocol import (
 )
 
 MAX_TASKS = 32
-MAX_TASKS_LIMIT = 256
 PRODUCER_IDLE_SECONDS = 30.0
-MAX_PRODUCER_IDLE_SECONDS = 3600.0
 
 
 class Settings(BaseSettings):
@@ -31,14 +29,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
     tcp_host: str = Field(default=DEFAULT_TCP_HOST, min_length=1)
-    tcp_port: int = Field(default=DEFAULT_TCP_PORT, ge=0, le=65535)
+    tcp_port: int = DEFAULT_TCP_PORT
     http_host: str = Field(default=DEFAULT_HTTP_HOST, min_length=1)
-    http_port: int = Field(default=DEFAULT_HTTP_PORT, ge=0, le=65535)
-    max_tasks: int = Field(default=MAX_TASKS, ge=1, le=MAX_TASKS_LIMIT)
-    producer_idle_seconds: float = Field(
-        default=PRODUCER_IDLE_SECONDS,
-        gt=0,
-        le=MAX_PRODUCER_IDLE_SECONDS,
-        allow_inf_nan=False,
-    )
+    http_port: int = DEFAULT_HTTP_PORT
+    max_tasks: int = Field(default=MAX_TASKS, ge=1)
+    producer_idle_seconds: float = Field(default=PRODUCER_IDLE_SECONDS, gt=0)
     docs_enabled: bool = True

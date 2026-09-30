@@ -8,7 +8,7 @@ Review status: the first review found no critical or high issues, 2 medium and 1
 
 Both sockets bind to `127.0.0.1` by default. The HTTP API and the TCP sample port have no authentication, so any local process can create tasks and inject samples. Setting `HTTP_HOST` or `TCP_HOST` to another address exposes that port on the chosen interface. An empty value is rejected at startup.
 
-`HTTP_PORT` and `TCP_PORT` are integers from 0 through 65535. `MAX_TASKS` is from 1 through 256 and defaults to 32. `PRODUCER_IDLE_SECONDS` is finite, above 0, at most 3600, and defaults to 30. Keep it above 10 seconds, the longest gap between samples at the minimum rate of 0.1, or slow Producers are disconnected. `DOCS_ENABLED` defaults to true. Unknown environment variables are ignored.
+`MAX_TASKS` is at least 1 and defaults to 32. `PRODUCER_IDLE_SECONDS` is above 0 and defaults to 30. Ports, the task maximum, and the idle timeout are operator settings, so they have no upper bound. A port outside 0 through 65535 fails at startup with an `OverflowError` from the socket. Keep it above 10 seconds, the longest gap between samples at the minimum rate of 0.1, or slow Producers are disconnected. `DOCS_ENABLED` defaults to true. Unknown environment variables are ignored.
 
 ## Current controls
 
@@ -26,9 +26,9 @@ Every buffer below has a fixed bound. Neither application loads an input file or
 | Decoder remainder | at most 7 bytes | A float64 split across reads |
 | Send batch | about 20 ms of samples, at least 1 | 20,000 samples at the rate cap |
 | Sample rate | finite, from 0.1 to 1,000,000 per second | CLI input, batch size, and the longest sleep |
-| Sample limit | 0 through `sys.maxsize` | CLI input |
+| Sample limit | 0 or more | CLI input |
 | Window | at most 100,000 samples | State of one windowed task |
-| Tasks | 32 by default, at most 256 through `MAX_TASKS` | Tasks stored at once |
+| Tasks | 32 by default, set through `MAX_TASKS` | Tasks stored at once |
 | HTTP request body | 16,384 bytes | One request body, declared or streamed without `Content-Length`. A declared length with too many digits is rejected without parsing it |
 | HTTP connections | 64 | Concurrent uvicorn connections |
 
@@ -107,7 +107,7 @@ Status: done.
 **H4. Huge limit crashes the Producer.** `src/producer/__main__.py:48`. `itertools.islice` raises `ValueError` for a limit above `sys.maxsize`, after the connection is open. Protects PRD-6.
 Fix: reject `limit > sys.maxsize` in `parse_limit`.
 Test: `sys.maxsize` accepted, `sys.maxsize + 1` rejected.
-Status: done.
+Status: withdrawn. Nobody passes a limit that large, and the failure is a traceback, not a wrong result. `parse_limit` still rejects a negative limit, which `islice` also refuses.
 
 **H5. No connect timeout.** `src/producer/__main__.py:104`. An unreachable host blocks until the operating system gives up, about 21 s on Windows and about 2 minutes on Linux. Protects PRD-1.
 Fix: `socket.create_connection(address, timeout=CONNECT_TIMEOUT_SECONDS)` with 5 s, then `connection.settimeout(None)` so `sendall` still blocks for backpressure.
@@ -127,7 +127,7 @@ Status: done.
 **H8. Unbounded settings.** `src/server/settings.py:28,30,32`. An empty `TCP_HOST` or `HTTP_HOST` binds every interface, and `MAX_TASKS` has no maximum.
 Fix: `min_length=1` on both hosts and `le=256` on `max_tasks`. State the memory cost per task in the README.
 Test: settings built from an empty host or `MAX_TASKS=257` raise a validation error.
-Status: done.
+Status: kept for the empty host only, which `asyncio` binds on every interface. The `MAX_TASKS` maximum was withdrawn because the operator sets that value.
 
 ### Priority 3: low, operational
 

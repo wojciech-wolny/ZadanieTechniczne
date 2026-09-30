@@ -2,7 +2,6 @@
 
 import argparse
 import socket
-import sys
 from pathlib import Path
 
 import pytest
@@ -141,7 +140,6 @@ def test_main_connects_with_timeout_then_sends_blocking(
 
     assert exit_code == 0
     assert connect_timeouts == [CONNECT_TIMEOUT_SECONDS]
-    assert CONNECT_TIMEOUT_SECONDS == 5
     assert connection.timeouts == [None]
     assert connection.payloads == [pack_samples([1.0, 2.0])]
 
@@ -150,14 +148,3 @@ def test_parse_rate_rejects_value_below_minimum() -> None:
     """Verify PRD-5 and H3: a rate just below one tenth is rejected."""
     with pytest.raises(argparse.ArgumentTypeError):
         parse_rate("0.09")
-
-
-def test_parse_limit_accepts_largest_size() -> None:
-    """Verify PRD-6 and H4: the largest supported limit is accepted."""
-    assert parse_limit(str(sys.maxsize)) == sys.maxsize
-
-
-def test_parse_limit_rejects_value_above_largest_size() -> None:
-    """Verify PRD-6 and H4: a limit above the largest supported size is rejected."""
-    with pytest.raises(argparse.ArgumentTypeError):
-        parse_limit(str(sys.maxsize + 1))

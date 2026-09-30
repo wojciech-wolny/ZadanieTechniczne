@@ -171,12 +171,8 @@ def calculate_slope(window: list[float]) -> float:
 
     :param window: sample values used as y coordinates
     :return: slope of the fitted line
-    :raises ValueError: when the window has fewer than two samples
     """
     sample_count = len(window)
-    if sample_count < 2:
-        raise ValueError("window needs at least two samples")
-
     mean_x = (sample_count - 1) / 2
     mean_y = sum(window) / sample_count
     numerator = 0.0

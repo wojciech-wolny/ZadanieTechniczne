@@ -10,10 +10,10 @@ Use this file when changing anything under `src/server/`. The repository map is 
 
 | Setting | Default | Bound |
 |---------|---------|-------|
-| `HTTP_HOST` / `HTTP_PORT` | `127.0.0.1:8000` | host non empty, port 0 to 65535 |
+| `HTTP_HOST` / `HTTP_PORT` | `127.0.0.1:8000` | host non empty |
 | `TCP_HOST` / `TCP_PORT` | `127.0.0.1:9000` | same |
-| `MAX_TASKS` | 32 | 1 to 256 |
-| `PRODUCER_IDLE_SECONDS` | 30 | finite, above 0, at most 3600 |
+| `MAX_TASKS` | 32 | at least 1 |
+| `PRODUCER_IDLE_SECONDS` | 30 | above 0 |
 | `DOCS_ENABLED` | true | hides `/docs`, `/redoc`, `/openapi.json` |
 
 Request bodies above 16384 bytes are rejected with 413 by `RequestSizeLimitMiddleware`.

@@ -14,7 +14,7 @@ MIN_SAMPLE_RATE = 0.1
 MAX_SAMPLE_RATE = 1_000_000
 CONNECT_TIMEOUT_SECONDS = 5.0
 RATE_ERROR = f"rate must be a finite number from {MIN_SAMPLE_RATE} to {MAX_SAMPLE_RATE}"
-LIMIT_ERROR = f"limit must be an integer from 0 to {sys.maxsize}"
+LIMIT_ERROR = "limit must be an integer of 0 or more"
 
 
 def parse_rate(value: str) -> float:
@@ -34,17 +34,17 @@ def parse_rate(value: str) -> float:
 
 
 def parse_limit(value: str) -> int:
-    """Parse a sample limit from zero to the largest supported size.
+    """Parse a sample limit of zero or more.
 
     :param value: command text
     :return: sample limit
-    :raises argparse.ArgumentTypeError: when the value is outside the range or not an integer
+    :raises argparse.ArgumentTypeError: when the value is negative or not an integer
     """
     try:
         limit = int(value)
     except ValueError as error:
         raise argparse.ArgumentTypeError(LIMIT_ERROR) from error
-    if limit < 0 or limit > sys.maxsize:
+    if limit < 0:
         raise argparse.ArgumentTypeError(LIMIT_ERROR)
     return limit
 
