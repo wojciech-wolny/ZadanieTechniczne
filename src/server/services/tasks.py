@@ -1,6 +1,7 @@
 """One processing task: algorithm, sink and statistics."""
 
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal, Self
 
@@ -11,6 +12,18 @@ from server.services.algorithms import (
     StatisticMap,
 )
 from server.services.sinks import SINK_FACTORIES, Sink
+
+
+@dataclass
+class BatchOutcome:
+    """Results and counters produced from one dispatched batch.
+
+    :attr results: values emitted by the algorithm
+    :attr samples_processed: number of consumed input samples
+    """
+
+    results: list[float]
+    samples_processed: int
 
 
 class ProcessingTask:
@@ -71,14 +84,23 @@ class ProcessingTask:
         :param samples: finite samples from one dispatch
         :raises Exception: when the algorithm or the sink fails
         """
+        outcome = self._process_batch(samples)
+        self.samples_processed += outcome.samples_processed
+        if outcome.results:
+            self.sink.write_results(outcome.results)
+
+    def _process_batch(self, samples: list[float]) -> BatchOutcome:
+        """Run the algorithm for one dispatched batch.
+
+        :param samples: finite samples from one dispatch
+        :return: emitted results and the number of consumed samples
+        """
         results: list[float] = []
         for sample in samples:
             result = self.algorithm.process_sample(sample)
-            self.samples_processed += 1
             if result is not None:
                 results.append(result)
-        if results:
-            self.sink.write_results(results)
+        return BatchOutcome(results=results, samples_processed=len(samples))
 
     def read_statistics(self) -> StatisticMap:
         """Return samples processed plus algorithm statistics.

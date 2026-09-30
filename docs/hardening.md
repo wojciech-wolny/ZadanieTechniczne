@@ -89,7 +89,7 @@ Fix: an ASGI middleware that returns 413 when `Content-Length` or the streamed b
 Test: a 17 KiB body returns 413, a valid body still returns 201, and a body without `Content-Length` that goes over the limit returns 413.
 Status: withdrawn. The task excludes authentication and production deployment, and any local process can already create tasks and inject samples, so the middleware and `limit_concurrency` cost more code than they protect. The README lists the missing body limit as a limitation.
 
-**H2. No idle timeout or keepalive on the Producer socket.** `src/server/services/receiver.py:92`. A silent or half open Producer, such as a crashed host or a lost network with no FIN, holds the only slot forever. SRV-6 then fails and only a restart recovers.
+**H2. No idle timeout or keepalive on the Producer socket.** `src/server/services/receiver.py:128`. A silent or half open Producer, such as a crashed host or a lost network with no FIN, holds the only slot forever. SRV-6 then fails and only a restart recovers.
 Fix: wrap each read in `asyncio.timeout(settings.producer_idle_seconds)` with a default of 30, and set `SO_KEEPALIVE` on the accepted socket. Add `PRODUCER_IDLE_SECONDS` to `Settings` and the README table.
 Test: with a 0.2 s timeout, a connection that sends nothing is closed, `producer_connected` becomes false, and a second Producer is then accepted.
 Status: done for the idle timeout. `SO_KEEPALIVE` was withdrawn because the timeout already frees the slot of a half open connection.
@@ -127,7 +127,7 @@ Status: kept for the empty host only, which `asyncio` binds on every interface. 
 
 ### Priority 3: low, operational
 
-**H9. Log flooding.** `src/producer/readers.py:68,87,90` and `src/server/services/receiver.py:72`. The Producer logs one warning per bad token on every pass, which never ends when `--limit 0`. The server logs one warning per rejected connection.
+**H9. Log flooding.** `src/producer/readers.py:59,152,154` and `src/server/services/receiver.py:92`. The Producer logs one warning per bad token on every pass, which never ends when `--limit 0`. The server logs one warning per rejected connection.
 Fix: count skipped values and log one summary per file pass. Log the first rejected connection, then at most one summary every 10 s with a count.
 Test: invalid tokens are skipped and one summary warning is logged per file pass.
 Status: done for the Producer summary per pass. The throttled server log was withdrawn, so the server logs one warning per rejected connection.

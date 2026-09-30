@@ -75,19 +75,36 @@ class SampleReceiver:
         :param reader: socket reader
         :param writer: socket writer
         """
-        if self.producer_connected:
-            logger.warning("rejected a second producer connection")
-            await self._close_writer(writer)
+        if not await self._take_producer_slot(writer):
             return
-        self.producer_connected = True
-        self._writers.add(writer)
         try:
             await self._read_samples(reader)
         finally:
-            self._decoder.discard_remainder()
-            self.producer_connected = False
-            self._writers.discard(writer)
+            await self._release_producer_slot(writer)
+
+    async def _take_producer_slot(self, writer: asyncio.StreamWriter) -> bool:
+        """Reserve the single producer slot or reject this connection.
+
+        :param writer: socket writer
+        :return: whether this connection was accepted
+        """
+        if self.producer_connected:
+            logger.warning("rejected a second producer connection")
             await self._close_writer(writer)
+            return False
+        self.producer_connected = True
+        self._writers.add(writer)
+        return True
+
+    async def _release_producer_slot(self, writer: asyncio.StreamWriter) -> None:
+        """Release the producer slot and close the connection.
+
+        :param writer: socket writer
+        """
+        self._decoder.discard_remainder()
+        self.producer_connected = False
+        self._writers.discard(writer)
+        await self._close_writer(writer)
 
     async def _read_samples(self, reader: asyncio.StreamReader) -> None:
         """Read chunks, decode them and dispatch finite batches.
@@ -95,24 +112,45 @@ class SampleReceiver:
         :param reader: socket reader
         """
         while True:
-            try:
-                async with asyncio.timeout(self._idle_seconds):
-                    chunk = await reader.read(READ_SIZE)
-            except TimeoutError:
-                logger.warning("closing producer idle for %s seconds", self._idle_seconds)
+            chunk = await self._read_chunk(reader)
+            if chunk is None:
                 return
-            except OSError:
-                logger.warning("producer connection ended")
+            if not self._decode_and_dispatch(chunk):
                 return
-            if chunk == b"":
-                return
-            try:
-                samples = self._decoder.decode(chunk)
-            except NonFiniteSampleError as error:
-                self._dispatch_samples(error.samples)
-                logger.warning("closing producer after a non finite sample")
-                return
-            self._dispatch_samples(samples)
+
+    async def _read_chunk(self, reader: asyncio.StreamReader) -> bytes | None:
+        """Read one chunk or return None when the connection should close.
+
+        :param reader: socket reader
+        :return: read bytes, or None on timeout, socket error or disconnect
+        """
+        try:
+            async with asyncio.timeout(self._idle_seconds):
+                chunk = await reader.read(READ_SIZE)
+        except TimeoutError:
+            logger.warning("closing producer idle for %s seconds", self._idle_seconds)
+            return None
+        except OSError:
+            logger.warning("producer connection ended")
+            return None
+        if chunk == b"":
+            return None
+        return chunk
+
+    def _decode_and_dispatch(self, chunk: bytes) -> bool:
+        """Decode one chunk and dispatch its finite prefix.
+
+        :param chunk: bytes from one TCP read
+        :return: whether the connection should stay open
+        """
+        try:
+            samples = self._decoder.decode(chunk)
+        except NonFiniteSampleError as error:
+            self._dispatch_samples(error.samples)
+            logger.warning("closing producer after a non finite sample")
+            return False
+        self._dispatch_samples(samples)
+        return True
 
     def _dispatch_samples(self, samples: list[float]) -> None:
         """Deliver decoded samples to the tasks and count them.

@@ -73,16 +73,38 @@ class TaskRegistry:
 
         :param samples: finite samples from one decoded read
         """
+        for task in self._running_tasks_snapshot():
+            self._process_task(task, samples)
+
+    def _running_tasks_snapshot(self) -> list[ProcessingTask]:
+        """Capture running tasks in creation order.
+
+        :return: running tasks from oldest to newest
+        """
         running: list[ProcessingTask] = []
         for task in self._tasks.values():
             if task.status == "running":
                 running.append(task)
-        for task in running:
-            try:
-                task.process_samples(samples)
-            except Exception as error:
-                task.record_failure(type(error).__name__)
-                try:
-                    task.close_sink()
-                except Exception:
-                    logger.warning("sink close failed for task %s", task.task_id)
+        return running
+
+    def _process_task(self, task: ProcessingTask, samples: list[float]) -> None:
+        """Process one task and isolate a failure.
+
+        :param task: running task captured at dispatch start
+        :param samples: finite samples from one decoded read
+        """
+        try:
+            task.process_samples(samples)
+        except Exception as error:
+            task.record_failure(type(error).__name__)
+            self._close_task_sink(task)
+
+    def _close_task_sink(self, task: ProcessingTask) -> None:
+        """Close one task sink and log close errors.
+
+        :param task: task whose sink should be closed
+        """
+        try:
+            task.close_sink()
+        except Exception:
+            logger.warning("sink close failed for task %s", task.task_id)
