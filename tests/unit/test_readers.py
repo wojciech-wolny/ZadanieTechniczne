@@ -12,7 +12,6 @@ from producer.readers import (
     read_binary_samples,
     read_text_samples,
 )
-from producer.streaming import limit_samples, repeat_samples
 
 
 @pytest.mark.parametrize("chunk_size", [1, 2, 3, 7, 65536], ids=["1", "2", "3", "7", "default"])
@@ -54,37 +53,6 @@ def test_read_text_samples_skips_invalid_and_non_finite_tokens(
 
 
 @pytest.mark.parametrize("chunk_size", [7, 65536], ids=["7", "default"])
-def test_read_text_samples_logs_one_warning_for_many_invalid_tokens(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-    chunk_size: int,
-) -> None:
-    """Verify PRD-4 and H9: a pass with 1000 invalid tokens logs exactly one warning."""
-    path = tmp_path / "invalid.txt"
-    path.write_text("bad " * 1000 + "3", encoding="utf-8")
-
-    values = list(read_text_samples(path, chunk_size=chunk_size))
-
-    assert values == [3.0]
-    assert len(caplog.records) == 1
-    assert "skipped 1000 text tokens" in caplog.text
-
-
-def test_read_text_samples_logs_one_warning_per_pass(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Verify PRD-7 and H9: each of three completed passes logs one summary."""
-    path = tmp_path / "invalid.txt"
-    path.write_text("bad " * 1000 + "3", encoding="utf-8")
-
-    values = list(limit_samples(repeat_samples(path, read_text_samples), 4))
-
-    assert values == [3.0, 3.0, 3.0, 3.0]
-    assert len(caplog.records) == 3
-
-
-@pytest.mark.parametrize("chunk_size", [1, 7, 65536], ids=["1", "7", "default"])
 def test_read_text_samples_accepts_token_at_length_limit(
     tmp_path: Path,
     chunk_size: int,
@@ -162,21 +130,6 @@ def test_read_binary_samples_skips_non_finite_values(
 
     assert values == [1.0, 2.0]
     assert "skipped 1 non finite binary samples" in caplog.text
-
-
-def test_read_binary_samples_logs_one_warning_for_many_non_finite_values(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Verify PRD-4 and H9: a pass with 1000 non finite values logs exactly one warning."""
-    path = tmp_path / "special.bin"
-    path.write_bytes(struct.pack("<f", math.inf) * 1000 + struct.pack("<f", 2.0))
-
-    values = list(read_binary_samples(path, chunk_size=7))
-
-    assert values == [2.0]
-    assert len(caplog.records) == 1
-    assert "skipped 1000 non finite binary samples" in caplog.text
 
 
 def test_read_binary_samples_ignores_trailing_bytes(

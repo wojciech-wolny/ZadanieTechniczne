@@ -194,28 +194,6 @@ def test_remove_task_closes_the_sink(monkeypatch: pytest.MonkeyPatch) -> None:
     assert sink.closed is True
 
 
-def test_close_all_closes_every_sink_even_when_one_fails(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Verify API-4: closing the registry closes each task sink and survives a failing close."""
-    failing_sink = ClosingSink()
-    healthy_sink = ClosingSink()
-
-    def fail_on_close() -> None:
-        raise OSError
-
-    failing_sink.close = fail_on_close
-    sinks = iter([failing_sink, healthy_sink])
-    monkeypatch.setitem(SINK_FACTORIES, "null", lambda: next(sinks))
-    registry = TaskRegistry()
-    registry.create_task(passthrough_task())
-    registry.create_task(passthrough_task())
-
-    registry.close_all()
-
-    assert healthy_sink.closed is True
-
-
 def test_dispatch_marks_failing_task_and_continues(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

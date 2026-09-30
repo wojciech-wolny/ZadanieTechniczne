@@ -30,7 +30,7 @@ class AverageConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Literal["average"]
-    window_size: int = Field(ge=1, le=MAX_WINDOW_SIZE, strict=True)
+    window_size: int = Field(ge=1, le=MAX_WINDOW_SIZE)
 
 
 class LinearRegressionConfig(BaseModel):
@@ -42,7 +42,7 @@ class LinearRegressionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Literal["linear_regression"]
-    window_size: int = Field(ge=2, le=MAX_WINDOW_SIZE, strict=True)
+    window_size: int = Field(ge=2, le=MAX_WINDOW_SIZE)
 
 
 AlgorithmConfig = Annotated[

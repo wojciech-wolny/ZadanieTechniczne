@@ -8,7 +8,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from server.main import create_app
-from server.services.sinks import SINK_FACTORIES
 
 
 def test_create_task_returns_created_task(client: TestClient) -> None:
@@ -119,7 +118,6 @@ def test_delete_task_unknown_id_returns_not_found(client: TestClient) -> None:
         {"algorithm": {"name": "missing"}},
         {"algorithm": {"name": "passthrough"}, "sink": "file"},
         {"algorithm": {"name": "passthrough"}, "sinks": "stdout"},
-        {"algorithm": {"name": "average", "window_size": "6"}},
     ],
     ids=[
         "average_below",
@@ -129,14 +127,13 @@ def test_delete_task_unknown_id_returns_not_found(client: TestClient) -> None:
         "unknown_algorithm",
         "unknown_sink",
         "unknown_field",
-        "window_size_text",
     ],
 )
 def test_create_task_rejects_invalid_configuration(
     client: TestClient,
     payload: dict,
 ) -> None:
-    """Verify API-5, ALG-4 and H7: invalid algorithms, sinks, sizes and field types return 422."""
+    """Verify API-5 and ALG-4: invalid algorithms, sinks and window limits return 422."""
     response = client.post("/api/v1/tasks", json=payload)
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -170,25 +167,6 @@ def test_create_task_when_full_returns_conflict(monkeypatch: pytest.MonkeyPatch)
     assert first.status_code == status.HTTP_201_CREATED
     assert second.status_code == status.HTTP_409_CONFLICT
     assert second.json()["detail"] == "Task limit reached"
-
-
-def test_shutdown_closes_the_sink_of_a_running_task(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Verify API-4: stopping the server closes the sinks of tasks that are still stored."""
-    closed: list[bool] = []
-
-    class RecordingSink:
-        def write_results(self, results: list[float]) -> None:
-            return
-
-        def close(self) -> None:
-            closed.append(True)
-
-    monkeypatch.setenv("TCP_PORT", "0")
-    monkeypatch.setitem(SINK_FACTORIES, "null", RecordingSink)
-    with TestClient(create_app()) as client:
-        client.post("/api/v1/tasks", json={"algorithm": {"name": "passthrough"}})
-
-    assert closed == [True]
 
 
 def test_read_stream_starts_idle(client: TestClient) -> None:

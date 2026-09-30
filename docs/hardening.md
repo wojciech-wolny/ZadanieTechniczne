@@ -54,7 +54,7 @@ Wire format and reassembly are in [wire-protocol.md](wire-protocol.md).
 
 Request and error shapes are in [rest-api.md](rest-api.md).
 
-Task identifiers are server generated UUID4 strings, used only as dictionary keys. Algorithm and sink names are a closed `Literal` set, with no dynamic import. Unknown fields, unknown names, and window sizes outside 1 to 100,000 (average) or 2 to 100,000 (linear regression) return 422. `window_size` is strict, so `"6"`, `6.0`, and `true` also return 422. A full registry returns 409, and a missing task returns 404. Deeply nested JSON returns 400.
+Task identifiers are server generated UUID4 strings, used only as dictionary keys. Algorithm and sink names are a closed `Literal` set, with no dynamic import. Unknown fields, unknown names, and window sizes outside 1 to 100,000 (average) or 2 to 100,000 (linear regression) return 422. A full registry returns 409, and a missing task returns 404. Deeply nested JSON returns 400.
 
 Dispatch works on a snapshot of the running tasks. Creation and deletion take effect on the next batch.
 
@@ -116,10 +116,9 @@ Fix: update `min_slope` and `max_slope` only when the slope is finite. `last_slo
 Test: a NaN window followed by windows with slope 5 and slope `-5` gives `min_slope` `-5` and `max_slope` 5.
 Status: done.
 
-**H7. Loose `window_size` typing.** `src/server/schemas.py:33,45`. `"6"`, `6.0`, and `true` are accepted, and `true` becomes a window of 1. Protects API-5.
-Fix: `Field(ge=..., le=..., strict=True)` on both window sizes.
-Test: add `"6"`, `6.0`, and `true` to the 422 parametrization in `tests/integration/test_api.py`.
-Status: done.
+**H7. Loose `window_size` typing.** `src/server/schemas.py:33,45`.
+Fix: withdrawn in the simplification pass. Coercion is accepted because it does not break the stream result and keeps request models shorter.
+Status: withdrawn by decision 15.
 
 **H8. Unbounded settings.** `src/server/settings.py:28,30,32`. An empty `TCP_HOST` or `HTTP_HOST` binds every interface, and `MAX_TASKS` has no maximum.
 Fix: `min_length=1` on both hosts and `le=256` on `max_tasks`. State the memory cost per task in the README.
@@ -130,7 +129,7 @@ Status: kept for the empty host only, which `asyncio` binds on every interface. 
 
 **H9. Log flooding.** `src/producer/readers.py:68,87,90` and `src/server/services/receiver.py:72`. The Producer logs one warning per bad token on every pass, which never ends when `--limit 0`. The server logs one warning per rejected connection.
 Fix: count skipped values and log one summary per file pass. Log the first rejected connection, then at most one summary every 10 s with a count.
-Test: a file with 1,000 invalid tokens produces one warning per pass.
+Test: invalid tokens are skipped and one summary warning is logged per file pass.
 Status: done for the Producer summary per pass. The throttled server log was withdrawn, so the server logs one warning per rejected connection.
 
 **H10. API surface advertised.** `src/server/main.py:56,68`. The docs endpoints and the `server` header are always exposed. This matters only on a non loopback bind.

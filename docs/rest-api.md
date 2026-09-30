@@ -104,7 +104,7 @@ Client errors use FastAPI's `{"detail": ...}` shape:
 |--------|--------|
 | 404 | `"Task not found"` |
 | 409 | `"Task limit reached"` |
-| 422 | Pydantic validation details, including a `window_size` that is not a JSON integer |
+| 422 | Pydantic validation details for invalid request bodies |
 
 An algorithm or sink exception changes that task to `failed`; the task remains in GET
 responses until deleted. `error` contains only the exception class name, with no message,
