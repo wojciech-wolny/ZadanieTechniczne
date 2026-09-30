@@ -29,6 +29,16 @@ def test_read_text_samples_chunk_size_does_not_change_values(
     assert values == [1.5, 2.25, 3.0, -40.0]
 
 
+def test_read_text_samples_ignores_a_byte_order_mark(tmp_path: Path) -> None:
+    """Verify PRD-4: a text file saved with a byte order mark keeps its first sample."""
+    path = tmp_path / "bom.txt"
+    path.write_bytes(b"\xef\xbb\xbf1.5 2.5 3.5\n")
+
+    values = list(read_text_samples(path))
+
+    assert values == [1.5, 2.5, 3.5]
+
+
 def test_read_text_samples_skips_invalid_and_non_finite_tokens(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
