@@ -2,7 +2,7 @@
 
 Robustness controls in the current Producer and Processing Server, the gaps found by the Stage 7 security review, and the plan to close them. Authentication, a second concurrent Producer, persistence, and production deployment are out of scope; see the limitations table in [README.md](../README.md).
 
-Review status: the first review found no critical or high issues, 2 medium and 11 low, verdict changes required. Every finding below was reproduced with a probe against the code at that time unless marked otherwise. H1 through H13 are done. The follow up review of the fixes found no critical, high, or medium issues and **approved** them. Its low findings are fixed: a `Content-Length` too long for `int` returned 500, and `PRODUCER_IDLE_SECONDS` accepted infinity.
+Review status: the first review found no critical or high issues, 2 medium and 11 low, verdict changes required. Every finding below was reproduced with a probe against the code at that time unless marked otherwise. H1 through H13 were done and the follow up review **approved** them. A later simplification pass withdrew H1, H4, and H10, and trimmed H2, H8, and H9, as their Status lines say (decision 15 in [decisions.md](decisions.md)). The rule is to keep a check only when it stops a crash or a wrong result on realistic input, because the task excludes production deployment.
 
 ## Trust boundary
 

@@ -158,7 +158,7 @@ Other characters in the same output are noise from the rest of the file. That is
 2. The server is one asyncio process. FastAPI and the TCP receiver share the loop started by uvicorn. Registry updates and sample dispatch do not interleave.
 3. Algorithms and sinks are selected from name registries. A new variant needs its own implementation, configuration model, and registry entry. Existing classes stay unchanged.
 4. If one task raises, it is marked `failed`, its `error` field is the exception class name, and other tasks keep running. The failed task remains visible until it is deleted.
-5. Window memory is bounded by `window_size` (at most 100000, about 3.2 MB per full task) and by `MAX_TASKS` (at most 256).
+5. Window memory is bounded by `window_size` (at most 100000, about 3.2 MB per full task) and by `MAX_TASKS` (32 by default).
 
 The longer form is in [docs/decisions.md](docs/decisions.md) and [docs/architecture.md](docs/architecture.md).
 

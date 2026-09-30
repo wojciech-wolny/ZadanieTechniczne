@@ -16,6 +16,7 @@
 12. **Task failures are isolated.** An algorithm or sink exception marks only that task as failed. Its safe error summary is exposed by the API, and other tasks continue receiving samples.
 13. **Path versioning.** REST resources use the prefix `/api/v1` (API-6). The next incompatible contract is `/api/v2`. `/docs` and `/openapi.json` stay unversioned.
 14. **Raw stream kept, packet protocol deferred.** [proposal-packet-protocol.md](proposal-packet-protocol.md) would let the server tell a clean end from a crash and reject foreign clients. The task needs neither: one trusted Producer, and a disconnect is handled the same way either way. The proposal stays as the next step if the format has to evolve.
+15. **Validate what breaks the result, not what is absurd.** A check stays when it prevents a crash, a wrong result, or unbounded memory on realistic input: rate, negative limit, window size, empty host, empty file pass, non finite values. It goes when it only rejects input nobody sends or a value the operator sets: upper bounds on ports, `MAX_TASKS`, the idle timeout and `--limit`, a request body size limit, a docs switch, socket keepalive and throttled rejection logs. The task excludes authentication and production deployment, and [hardening.md](hardening.md) records which findings were withdrawn.
 
 ## Assumptions
 
