@@ -49,22 +49,6 @@ def parse_limit(value: str) -> int:
     return limit
 
 
-def parse_port(value: str) -> int:
-    """Parse a TCP port from 0 to 65535.
-
-    :param value: command text
-    :return: port number
-    :raises argparse.ArgumentTypeError: when the value is outside the port range
-    """
-    try:
-        port = int(value)
-    except ValueError as error:
-        raise argparse.ArgumentTypeError("port must be from 0 to 65535") from error
-    if port < 0 or port > 65535:
-        raise argparse.ArgumentTypeError("port must be from 0 to 65535")
-    return port
-
-
 def build_parser() -> argparse.ArgumentParser:
     """Build the producer command line parser.
 
@@ -87,7 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="samples to send, 0 means unlimited",
     )
     parser.add_argument("--host", default=DEFAULT_TCP_HOST, help="server host")
-    parser.add_argument("--port", type=parse_port, default=DEFAULT_TCP_PORT, help="server port")
+    parser.add_argument("--port", type=int, default=DEFAULT_TCP_PORT, help="server port")
     return parser
 
 
