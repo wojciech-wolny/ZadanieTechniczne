@@ -9,13 +9,11 @@ from fastapi.responses import JSONResponse
 
 from server.api.stream import router as stream_router
 from server.api.tasks import router as tasks_router
-from server.middleware import RequestSizeLimitMiddleware
 from server.services.receiver import SampleReceiver
 from server.services.registry import TaskLimitError, TaskRegistry
 from server.settings import Settings
 
 API_V1_PREFIX = "/api/v1"
-HTTP_CONCURRENCY_LIMIT = 64
 DOCS_URL = "/docs"
 REDOC_URL = "/redoc"
 OPENAPI_URL = "/openapi.json"
@@ -72,7 +70,6 @@ def create_app() -> FastAPI:
         openapi_url=OPENAPI_URL if settings.docs_enabled else None,
     )
     app.state.settings = settings
-    app.add_middleware(RequestSizeLimitMiddleware)
     app.add_exception_handler(TaskLimitError, handle_task_limit)
     api_v1 = APIRouter(prefix=API_V1_PREFIX)
     api_v1.include_router(tasks_router)
@@ -85,13 +82,7 @@ def main() -> None:
     """Run the HTTP server and the sample receiver."""
     app = create_app()
     settings: Settings = app.state.settings
-    uvicorn.run(
-        app,
-        host=settings.http_host,
-        port=settings.http_port,
-        limit_concurrency=HTTP_CONCURRENCY_LIMIT,
-        server_header=False,
-    )
+    uvicorn.run(app, host=settings.http_host, port=settings.http_port)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from server.main import create_app
-from server.middleware import MAX_REQUEST_BYTES
 from server.services.sinks import SINK_FACTORIES
 
 
@@ -206,86 +205,6 @@ def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPa
     assert redoc.status_code == status.HTTP_404_NOT_FOUND
     assert schema.status_code == status.HTTP_404_NOT_FOUND
     assert tasks.status_code == status.HTTP_200_OK
-
-
-def pad_task_body(size: int) -> bytes:
-    """Return a valid passthrough task body padded with spaces to the given size.
-
-    :param size: total body length in bytes
-    :return: JSON request body
-    """
-    body = b'{"algorithm": {"name": "passthrough"}}'
-    return body + b" " * (size - len(body))
-
-
-def test_create_task_body_at_size_limit_is_created(client: TestClient) -> None:
-    """Verify SRV-9 and H1: a valid body of exactly the size limit still creates a task."""
-    response = client.post(
-        "/api/v1/tasks",
-        content=pad_task_body(MAX_REQUEST_BYTES),
-        headers={"content-type": "application/json"},
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
-
-
-def test_create_task_body_above_size_limit_returns_413(client: TestClient) -> None:
-    """Verify SRV-9 and H1: a declared body above the size limit returns 413."""
-    response = client.post(
-        "/api/v1/tasks",
-        content=pad_task_body(MAX_REQUEST_BYTES + 1),
-        headers={"content-type": "application/json"},
-    )
-
-    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
-    assert response.json() == {"detail": "Request body too large"}
-    assert client.get("/api/v1/tasks").json() == []
-
-
-@pytest.mark.parametrize(
-    "declared_length",
-    ["16385", "9" * 5000, "0" * 5000 + "16385"],
-    ids=["one_above_limit", "beyond_int_digits", "leading_zeros"],
-)
-def test_create_task_declared_length_above_limit_returns_413(
-    client: TestClient,
-    declared_length: str,
-) -> None:
-    """Verify SRV-9 and H1: a declared length above the limit returns 413 without parsing it."""
-    response = client.post(
-        "/api/v1/tasks",
-        content=b"{}",
-        headers={"content-type": "application/json", "content-length": declared_length},
-    )
-
-    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
-
-
-def test_create_task_streamed_body_above_size_limit_returns_413(client: TestClient) -> None:
-    """Verify SRV-9 and H1: a body without Content Length that exceeds the limit returns 413."""
-    chunks = iter([b" " * 8192, b" " * 8192, b" "])
-
-    response = client.post(
-        "/api/v1/tasks",
-        content=chunks,
-        headers={"content-type": "application/json"},
-    )
-
-    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
-    assert response.json() == {"detail": "Request body too large"}
-
-
-def test_create_task_streamed_body_within_size_limit_is_created(client: TestClient) -> None:
-    """Verify SRV-9 and H1: a body without Content Length within the limit creates a task."""
-    chunks = iter([b'{"algorithm": ', b'{"name": "passthrough"}}'])
-
-    response = client.post(
-        "/api/v1/tasks",
-        content=chunks,
-        headers={"content-type": "application/json"},
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
 
 
 def test_read_stream_starts_idle(client: TestClient) -> None:

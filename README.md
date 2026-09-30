@@ -39,7 +39,7 @@ These environment variables override the defaults. Both applications bind to loc
 | `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed, above 0. Keep it above 10 so a Producer at `--rate 0.1` stays connected |
 | `DOCS_ENABLED` | `true` | Serve `/docs`, `/redoc` and `/openapi.json`. Set `false` to hide them |
 
-A full window of 100000 samples takes about 3.2 MB, so the default 32 tasks take about 100 MB at most. HTTP request bodies above 16384 bytes are rejected with 413, and uvicorn accepts at most 64 concurrent connections.
+A full window of 100000 samples takes about 3.2 MB, so the default 32 tasks take about 100 MB at most.
 
 Stdout task output is written to the server process, so watch that terminal.
 
@@ -68,7 +68,7 @@ Every resource is under `/api/v1`. A later incompatible API would use a new pref
 
 | Method | Path | Success | Other |
 |--------|------|---------|-------|
-| `POST` | `/api/v1/tasks` | 201 `TaskRead` | 409 when `MAX_TASKS` is reached, 413 when the body is larger than 16384 bytes, 422 when the body is invalid |
+| `POST` | `/api/v1/tasks` | 201 `TaskRead` | 409 when `MAX_TASKS` is reached, 422 when the body is invalid |
 | `GET` | `/api/v1/tasks` | 200 list, oldest first | |
 | `GET` | `/api/v1/tasks/{task_id}` | 200 `TaskRead` | 404 `{"detail": "Task not found"}` |
 | `DELETE` | `/api/v1/tasks/{task_id}` | 204 empty body | 404 |
@@ -176,7 +176,7 @@ The longer form is in [docs/decisions.md](docs/decisions.md) and [docs/architect
 | Bytes of a sample split by disconnect are dropped | Frame samples with sequence numbers if that loss matters |
 | Several stdout tasks interleave their batches | Write each task to its own file or WebSocket |
 | A Producer that connects and sends nothing holds the only slot for up to `PRODUCER_IDLE_SECONDS` | Lower the timeout, or map connections to named streams |
-| There is no authentication, no persistence, and no second server | Out of scope for this task |
+| There is no authentication, no limit on the HTTP request body size, no persistence, and no second server | Out of scope for this task. A reverse proxy would limit the body size |
 
 ## Documentation
 

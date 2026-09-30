@@ -29,9 +29,6 @@ Every buffer below has a fixed bound. Neither application loads an input file or
 | Sample limit | 0 or more | CLI input |
 | Window | at most 100,000 samples | State of one windowed task |
 | Tasks | 32 by default, set through `MAX_TASKS` | Tasks stored at once |
-| HTTP request body | 16,384 bytes | One request body, declared or streamed without `Content-Length`. A declared length with too many digits is rejected without parsing it |
-| HTTP connections | 64 | Concurrent uvicorn connections |
-
 A full window holds about 3.2 MB, so the default 32 tasks hold about 100 MB and the maximum 256 tasks about 820 MB. One 64 KiB read dispatched to 32 linear regression tasks blocks the event loop for about 65 ms (measured).
 
 No module under `src/` creates a temporary file or calls `eval`, `exec`, `pickle`, or a shell. Input files are opened read only. `scripts/demo.py` starts processes with list arguments and no shell.
@@ -57,13 +54,13 @@ Wire format and reassembly are in [wire-protocol.md](wire-protocol.md).
 
 Request and error shapes are in [rest-api.md](rest-api.md).
 
-Task identifiers are server generated UUID4 strings, used only as dictionary keys. Algorithm and sink names are a closed `Literal` set, with no dynamic import. Unknown fields, unknown names, and window sizes outside 1 to 100,000 (average) or 2 to 100,000 (linear regression) return 422. `window_size` is strict, so `"6"`, `6.0`, and `true` also return 422. A request body above 16,384 bytes returns 413 before it is parsed. A full registry returns 409, and a missing task returns 404. Deeply nested JSON returns 400.
+Task identifiers are server generated UUID4 strings, used only as dictionary keys. Algorithm and sink names are a closed `Literal` set, with no dynamic import. Unknown fields, unknown names, and window sizes outside 1 to 100,000 (average) or 2 to 100,000 (linear regression) return 422. `window_size` is strict, so `"6"`, `6.0`, and `true` also return 422. A full registry returns 409, and a missing task returns 404. Deeply nested JSON returns 400.
 
 Dispatch works on a snapshot of the running tasks. Creation and deletion take effect on the next batch.
 
 If one task raises, only that task is marked `failed` and its sink is closed. `error` holds the exception class name only, with no message, traceback, or path. A non finite statistic becomes JSON `null`, and the stdout sink writes `#` for a non finite result. A NaN slope is reported as `last_slope` but does not change `min_slope` or `max_slope`.
 
-FastAPI runs with debug off, so an unexpected error returns a generic 500. `/docs`, `/redoc`, and `/openapi.json` are served unless `DOCS_ENABLED` is false. Uvicorn sends no `server` header.
+FastAPI runs with debug off, so an unexpected error returns a generic 500. `/docs`, `/redoc`, and `/openapi.json` are served unless `DOCS_ENABLED` is false.
 
 Stdout writes run on the event loop, so a blocked terminal stalls every task and the Producer. OUT-4 maps 0 through 127 to characters. That range includes ESC and other control codes, so the Producer can send ANSI escape sequences to the server terminal (accepted, see Residual risk).
 
@@ -90,7 +87,7 @@ The plan follows the project rules: the simplest change, one home for each const
 **H1. Unbounded HTTP request body.** `src/server/main.py`. Uvicorn and Starlette set no body limit, and FastAPI reads the full body before validation. One large `POST /api/v1/tasks` can use up server memory, which breaks the bounded memory goal of SRV-9.
 Fix: an ASGI middleware that returns 413 when `Content-Length` or the streamed body exceeds `MAX_REQUEST_BYTES = 16384`. Also pass `limit_concurrency=64` to `uvicorn.run`.
 Test: a 17 KiB body returns 413, a valid body still returns 201, and a body without `Content-Length` that goes over the limit returns 413.
-Status: done. `RequestSizeLimitMiddleware` in `src/server/middleware.py`.
+Status: withdrawn. The task excludes authentication and production deployment, and any local process can already create tasks and inject samples, so the middleware and `limit_concurrency` cost more code than they protect. The README lists the missing body limit as a limitation.
 
 **H2. No idle timeout or keepalive on the Producer socket.** `src/server/services/receiver.py:92`. A silent or half open Producer, such as a crashed host or a lost network with no FIN, holds the only slot forever. SRV-6 then fails and only a restart recovers.
 Fix: wrap each read in `asyncio.timeout(settings.producer_idle_seconds)` with a default of 30, and set `SO_KEEPALIVE` on the accepted socket. Add `PRODUCER_IDLE_SECONDS` to `Settings` and the README table.
@@ -139,7 +136,7 @@ Status: done.
 **H10. API surface advertised.** `src/server/main.py:56,68`. The docs endpoints and the `server` header are always exposed. This matters only on a non loopback bind.
 Fix: a `DOCS_ENABLED` setting, default true to keep the README workflow, that sets `docs_url`, `redoc_url`, and `openapi_url` to `None` when false. Pass `server_header=False` to `uvicorn.run`.
 Test: with docs disabled, `/docs` returns 404 and `/api/v1/tasks` still works.
-Status: done.
+Status: done for `DOCS_ENABLED`. The `server_header=False` option was withdrawn.
 
 **H11. No dependency floors.** `pyproject.toml:7`. An install that ignores the lock can resolve old releases, for example h11 below 0.16 with a known request smuggling issue.
 Fix: floors near the locked versions for `fastapi`, `uvicorn`, and `pydantic-settings`, plus `h11>=0.16`. Refresh `uv.lock`.
@@ -178,5 +175,5 @@ Accepted in the current design:
 | Bytes of a sample split by a disconnect are discarded | Unframed protocol. See [wire-protocol.md](wire-protocol.md) |
 | Uvicorn header read timeout not verified | Check the uvicorn version in use before binding beyond localhost |
 | A local process can keep the only Producer slot by sending one sample more often than every `PRODUCER_IDLE_SECONDS` | Same trust level as no authentication. Named streams or authentication would solve it |
-| Uvicorn has no body read timeout, so 64 clients sending bodies slowly can hold every allowed HTTP connection | Local denial of service only on the default bind. A reverse proxy with timeouts would solve it |
+| Uvicorn has no request body size limit and no body read timeout, so a large or slow body can use memory or hold connections | Local denial of service only on the default bind. A reverse proxy with limits would solve it |
 | After a burst of rejected Producers, the count since the last warning is not logged if no further rejection arrives | Log volume stays bounded. A periodic flush would report the tail |

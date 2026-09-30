@@ -16,8 +16,6 @@ Use this file when changing anything under `src/server/`. The repository map is 
 | `PRODUCER_IDLE_SECONDS` | 30 | above 0 |
 | `DOCS_ENABLED` | true | hides `/docs`, `/redoc`, `/openapi.json` |
 
-Request bodies above 16384 bytes are rejected with 413 by `RequestSizeLimitMiddleware`.
-
 ## Sample path
 
 1. `SampleReceiver` accepts one producer. Further connections are closed. Reads are 64 KiB. Idle longer than `producer_idle_seconds` closes the socket.
@@ -57,7 +55,7 @@ Router prefix `/tasks` and `/stream`, mounted at `/api/v1`.
 
 | Call | Success | Other |
 |------|---------|-------|
-| `POST /tasks` | 201 `TaskRead` | 409 limit, 413 body size, 422 invalid body |
+| `POST /tasks` | 201 `TaskRead` | 409 limit, 422 invalid body |
 | `GET /tasks` | 200 list | |
 | `GET /tasks/{task_id}` | 200 | 404 `{"detail": "Task not found"}` |
 | `DELETE /tasks/{task_id}` | 204 empty | 404 |

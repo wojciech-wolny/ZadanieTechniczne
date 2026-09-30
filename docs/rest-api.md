@@ -6,7 +6,7 @@ Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). 
 
 | Method | Path | Request | Response | Status |
 |--------|------|---------|----------|--------|
-| POST | `/api/v1/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached, 413 when the body is too large |
+| POST | `/api/v1/tasks` | `TaskCreate` | `TaskRead` | 201, 422, 409 when the task limit is reached |
 | GET | `/api/v1/tasks` | | `list[TaskRead]` | 200 |
 | GET | `/api/v1/tasks/{task_id}` | | `TaskRead` | 200, 404 |
 | DELETE | `/api/v1/tasks/{task_id}` | | empty | 204, 404 |
@@ -104,7 +104,6 @@ Client errors use FastAPI's `{"detail": ...}` shape:
 |--------|--------|
 | 404 | `"Task not found"` |
 | 409 | `"Task limit reached"` |
-| 413 | `"Request body too large"`, for any request body above 16384 bytes |
 | 422 | Pydantic validation details, including a `window_size` that is not a JSON integer |
 
 An algorithm or sink exception changes that task to `failed`; the task remains in GET
