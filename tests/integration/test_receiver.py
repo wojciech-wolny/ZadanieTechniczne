@@ -9,10 +9,8 @@ from fastapi.testclient import TestClient
 
 from common.protocol import SAMPLE_FORMAT, pack_samples
 from server.main import create_app
-from server.services import receiver as receiver_module
 from tests.support import (
     bound_port,
-    connect_rejected_producer,
     send_payload,
     send_payload_in_chunks,
     send_samples,
@@ -41,67 +39,6 @@ def test_second_producer_is_rejected_and_the_first_still_counts(client: TestClie
 
     body = wait_for_stream(client, 1, False)
     assert body["samples_received"] == 1
-
-
-class ManualMonotonic:
-    """Stand in for the time module with a clock moved by the test.
-
-    :attr now: current fake monotonic time
-    """
-
-    def __init__(self) -> None:
-        self.now = 0.0
-
-    def monotonic(self) -> float:
-        """Return the current fake time.
-
-        :return: monotonic time
-        """
-        return self.now
-
-
-def read_rejection_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
-    """Return the logged second producer rejection messages.
-
-    :param caplog: captured log records
-    :return: rejection messages in order
-    """
-    messages: list[str] = []
-    for record in caplog.records:
-        message = record.getMessage()
-        if "second producer" in message:
-            messages.append(message)
-    return messages
-
-
-def test_rejected_producers_are_logged_once_per_interval(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Verify SRV-1 and H9: rejections log the first one, then one count per 10 seconds."""
-    clock = ManualMonotonic()
-    monkeypatch.setattr(receiver_module, "time", clock)
-    port = bound_port(client)
-    first = socket.create_connection(("127.0.0.1", port), timeout=5)
-    try:
-        wait_for_stream(client, 0, True)
-        connect_rejected_producer(port)
-        connect_rejected_producer(port)
-        connect_rejected_producer(port)
-        after_burst = read_rejection_messages(caplog)
-        clock.now = 9.9
-        connect_rejected_producer(port)
-        before_interval = read_rejection_messages(caplog)
-        clock.now = 10.0
-        connect_rejected_producer(port)
-        at_interval = read_rejection_messages(caplog)
-    finally:
-        first.close()
-
-    assert after_burst == ["rejected 1 second producer connections"]
-    assert before_interval == after_burst
-    assert at_interval == after_burst + ["rejected 4 second producer connections"]
 
 
 def test_idle_producer_is_closed_and_a_new_one_is_accepted(

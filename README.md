@@ -143,7 +143,7 @@ Other characters in the same output are noise from the rest of the file. That is
 2. A binary file whose length is not a multiple of 4 bytes ignores the trailing bytes, with a warning. Non finite float32 values are skipped with one summary warning per pass.
 3. If a full pass over the file yields no samples, the Producer stops with an error. This covers an empty file, a whitespace only file, a file of invalid tokens, and a binary file shorter than 4 bytes.
 4. `rate` has no "as fast as possible" setting. The Producer sends the first batch immediately, then uses a monotonic clock. About 20 ms of samples are sent together. If the process falls behind, it sends immediately instead of accumulating delay.
-5. The Producer does not reconnect and gives up connecting after 5 seconds. The server keeps running after a disconnect and accepts another Producer. A Producer that sends nothing for `PRODUCER_IDLE_SECONDS` is disconnected, and TCP keepalive is enabled on its socket. A rejected second Producer is logged once, then at most once every 10 seconds with a count.
+5. The Producer does not reconnect and gives up connecting after 5 seconds. The server keeps running after a disconnect and accepts another Producer. A Producer that sends nothing for `PRODUCER_IDLE_SECONDS` is disconnected. A rejected second Producer is logged as a warning.
 6. ASCII rounding is bankers rounding. `65.5` becomes `B`, and `66.5` also becomes `B`.
 7. A task is included in the next sample batch after creation. It never joins a batch that is already being processed, and samples from before creation are not replayed.
 8. Deleting a task closes its sink. There is no paused state.

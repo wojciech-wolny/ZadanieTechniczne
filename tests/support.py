@@ -51,19 +51,6 @@ def send_payload_in_chunks(port: int, payload: bytes, chunk_size: int) -> None:
             index += chunk_size
 
 
-def connect_rejected_producer(port: int) -> bytes:
-    """Connect while another producer holds the slot and read until the server closes.
-
-    :param port: receiver port
-    :return: bytes received before the close, expected to be empty
-    """
-    with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
-        try:
-            return connection.recv(8)
-        except (ConnectionResetError, ConnectionAbortedError):
-            return b""
-
-
 def wait_until(client: TestClient, ready: Callable[[dict], bool]) -> dict:
     """Poll stream status until the predicate matches.
 

@@ -2,8 +2,6 @@
 
 import asyncio
 import logging
-import socket
-import time
 
 from server.services.decoder import NonFiniteSampleError, SampleDecoder
 from server.services.registry import TaskRegistry
@@ -11,7 +9,6 @@ from server.services.registry import TaskRegistry
 logger = logging.getLogger(__name__)
 
 READ_SIZE = 65536
-REJECTION_LOG_INTERVAL_SECONDS = 10.0
 
 
 class SampleReceiver:
@@ -38,8 +35,6 @@ class SampleReceiver:
         self._server: asyncio.Server | None = None
         self._decoder = SampleDecoder()
         self._writers: set[asyncio.StreamWriter] = set()
-        self._rejected_count = 0
-        self._rejection_logged_at: float | None = None
 
     async def start(self) -> None:
         """Start listening for a producer connection."""
@@ -81,32 +76,18 @@ class SampleReceiver:
         :param writer: socket writer
         """
         if self.producer_connected:
-            self._log_rejection()
+            logger.warning("rejected a second producer connection")
             await self._close_writer(writer)
             return
         self.producer_connected = True
         self._writers.add(writer)
         try:
-            connection = writer.get_extra_info("socket")
-            if connection is not None:
-                connection.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             await self._read_samples(reader)
         finally:
             self._decoder.discard_remainder()
             self.producer_connected = False
             self._writers.discard(writer)
             await self._close_writer(writer)
-
-    def _log_rejection(self) -> None:
-        """Count a rejected producer and log the count at most once per interval."""
-        self._rejected_count += 1
-        now = time.monotonic()
-        last_logged = self._rejection_logged_at
-        if last_logged is not None and now - last_logged < REJECTION_LOG_INTERVAL_SECONDS:
-            return
-        logger.warning("rejected %s second producer connections", self._rejected_count)
-        self._rejection_logged_at = now
-        self._rejected_count = 0
 
     async def _read_samples(self, reader: asyncio.StreamReader) -> None:
         """Read chunks, decode them and dispatch finite batches.

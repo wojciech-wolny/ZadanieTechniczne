@@ -45,10 +45,10 @@ A failed connection, a missing file, or a text decode error prints one line and 
 
 Wire format and reassembly are in [wire-protocol.md](wire-protocol.md).
 
-1. The receiver accepts one Producer. The Producer slot is checked and taken with no `await` in between, so two connections cannot both get it. A second connection is closed without being read, and the first keeps its slot. The first rejection is logged, then at most one warning every 10 seconds with the count since the last warning.
+1. The receiver accepts one Producer. The Producer slot is checked and taken with no `await` in between, so two connections cannot both get it. A second connection is closed without being read, and the first keeps its slot. Each rejection is logged as a warning.
 2. On disconnect or on an error in the read loop, the server drops the partial sample, clears the connected flag, closes the writer, and keeps listening. Task windows stay in memory, and the next Producer continues the stream.
 3. NaN or infinity closes that connection. Finite samples before the bad value are dispatched first, so the result does not depend on read boundaries (H13). The decoder clears its remainder, so the next Producer starts on an 8 byte boundary.
-4. Each read waits at most `PRODUCER_IDLE_SECONDS`, 30 by default. A silent Producer is logged and closed, the slot is freed, and the next Producer is accepted. `SO_KEEPALIVE` is set on the accepted socket.
+4. Each read waits at most `PRODUCER_IDLE_SECONDS`, 30 by default. A silent Producer is logged and closed, the slot is freed, and the next Producer is accepted.
 
 ### Tasks and the API
 
@@ -92,7 +92,7 @@ Status: withdrawn. The task excludes authentication and production deployment, a
 **H2. No idle timeout or keepalive on the Producer socket.** `src/server/services/receiver.py:92`. A silent or half open Producer, such as a crashed host or a lost network with no FIN, holds the only slot forever. SRV-6 then fails and only a restart recovers.
 Fix: wrap each read in `asyncio.timeout(settings.producer_idle_seconds)` with a default of 30, and set `SO_KEEPALIVE` on the accepted socket. Add `PRODUCER_IDLE_SECONDS` to `Settings` and the README table.
 Test: with a 0.2 s timeout, a connection that sends nothing is closed, `producer_connected` becomes false, and a second Producer is then accepted.
-Status: done.
+Status: done for the idle timeout. `SO_KEEPALIVE` was withdrawn because the timeout already frees the slot of a half open connection.
 
 ### Priority 2: low, crash or wrong result
 
@@ -131,7 +131,7 @@ Status: kept for the empty host only, which `asyncio` binds on every interface. 
 **H9. Log flooding.** `src/producer/readers.py:68,87,90` and `src/server/services/receiver.py:72`. The Producer logs one warning per bad token on every pass, which never ends when `--limit 0`. The server logs one warning per rejected connection.
 Fix: count skipped values and log one summary per file pass. Log the first rejected connection, then at most one summary every 10 s with a count.
 Test: a file with 1,000 invalid tokens produces one warning per pass.
-Status: done.
+Status: done for the Producer summary per pass. The throttled server log was withdrawn, so the server logs one warning per rejected connection.
 
 **H10. API surface advertised.** `src/server/main.py:56,68`. The docs endpoints and the `server` header are always exposed. This matters only on a non loopback bind.
 Fix: a `DOCS_ENABLED` setting, default true to keep the README workflow, that sets `docs_url`, `redoc_url`, and `openapi_url` to `None` when false. Pass `server_header=False` to `uvicorn.run`.
@@ -176,4 +176,4 @@ Accepted in the current design:
 | Uvicorn header read timeout not verified | Check the uvicorn version in use before binding beyond localhost |
 | A local process can keep the only Producer slot by sending one sample more often than every `PRODUCER_IDLE_SECONDS` | Same trust level as no authentication. Named streams or authentication would solve it |
 | Uvicorn has no request body size limit and no body read timeout, so a large or slow body can use memory or hold connections | Local denial of service only on the default bind. A reverse proxy with limits would solve it |
-| After a burst of rejected Producers, the count since the last warning is not logged if no further rejection arrives | Log volume stays bounded. A periodic flush would report the tail |
+| A local process that reconnects in a loop while the slot is taken writes one warning per attempt | Same trust level as no authentication. A rate limited log would solve it |
