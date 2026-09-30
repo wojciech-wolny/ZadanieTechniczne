@@ -11,6 +11,6 @@ Use this file when changing `src/common/`. Both processes import this package. I
 
 `pack_samples([])` returns `b""`. A non empty list is `struct.pack(f"<{count}d", *samples)`.
 
-Binary input files are float32 (`<f`, 4 bytes). That constant stays in `src/producer/readers.py` as `BINARY_SAMPLE_FORMAT`. Do not reuse `SAMPLE_FORMAT` for file reads.
+Binary input files are float32 (`<f`, 4 bytes). That constant stays in `src/producer/constants.py` as `BINARY_SAMPLE_FORMAT`. Do not reuse `SAMPLE_FORMAT` for file reads.
 
 Changing `SAMPLE_FORMAT` or `SAMPLE_SIZE` requires the same change on both sides and an update of `docs/wire-protocol.md`.

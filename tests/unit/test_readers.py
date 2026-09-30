@@ -6,12 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from producer.readers import (
-    MAX_TOKEN_LENGTH,
-    parse_token,
-    read_binary_samples,
-    read_text_samples,
-)
+from producer.constants import MAX_TOKEN_LENGTH
+from producer.readers import parse_token, read_binary_samples, read_text_samples
 
 
 @pytest.mark.parametrize("chunk_size", [1, 2, 3, 7, 65536], ids=["1", "2", "3", "7", "default"])

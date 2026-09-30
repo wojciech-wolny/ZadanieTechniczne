@@ -22,7 +22,7 @@ Those files are the current contracts. `docs/architecture.md` and `docs/decision
 
 ## Fast facts
 
-1. Producer file formats and the TCP format differ. Text and float32 files go in. Little endian float64 (`<d`, 8 bytes) goes on the wire through `common.protocol.pack_samples`.
+1. Producer file formats and the TCP format differ. Text and float32 files go in. Float32 layout and input limits live in `producer.constants`. Little endian float64 (`<d`, 8 bytes) goes on the wire through `common.protocol.pack_samples`.
 2. `TaskRegistry.dispatch` snapshots `status == "running"` before it calls tasks. A task created during that call waits for the next dispatch. One task failure marks that task `failed`, closes its sink, and leaves the others running.
 3. `src/server/services/` does not import FastAPI. New algorithms and sinks are a new class, a schema entry, and one factory registration. Existing classes stay unchanged.
-4. Python here has no code comments. Docstrings are one sentence and contain no hyphen characters.
+4. Python here has no code comments. Docstrings are one sentence and contain no hyphen characters. A function name is the comment for an action. Nested or long blocks are split so the caller stays a short flat sequence. Three or more related values travel on a dataclass. Shared method sets use a protocol.

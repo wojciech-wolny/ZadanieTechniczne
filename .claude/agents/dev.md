@@ -33,7 +33,7 @@ Read `CLAUDE.md` and the package file beside the code you will change (`src/serv
 2. Follow `python-code-style` strictly: no comments, one sentence docstrings with `:param:`, `:return:`, `:raises:`, `:attr:`, no "-" in docstrings.
 3. Type public functions, methods and attributes.
 4. Prefer `if` checks over `try/except`. Catch only narrow exceptions at I/O boundaries.
-5. Functions are actions, variables are readable words, regular `for` loops over complex comprehensions.
+5. Functions are actions, variables are readable words, regular `for` loops over complex comprehensions. Split a nested or long block into functions whose names are the steps, so the caller stays a short flat sequence. Put three or more related values on a dataclass instead of a long parameter list or an unnamed tuple. Use a protocol when several classes share the same methods.
 6. Follow `fastapi-best-practices` for anything under the server API.
 7. Stream data: read files in chunks, keep only the current window in memory, handle partial TCP reads and partial binary floats.
 8. Handle client disconnection without crashing the server.

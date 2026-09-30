@@ -1,6 +1,6 @@
 # Producer context
 
-Use this file when changing anything under `src/producer/`. The repository map is `CLAUDE.md`. The wire constants live in `src/common/CLAUDE.md`.
+Use this file when changing anything under `src/producer/`. The repository map is `CLAUDE.md`. The wire constants live in `src/common/CLAUDE.md`. Input chunk sizes, `BINARY_SAMPLE_FORMAT`, and `MAX_TOKEN_LENGTH` live in `src/producer/constants.py`.
 
 The Producer is a synchronous TCP client. It does not import FastAPI and it does not load a whole file.
 

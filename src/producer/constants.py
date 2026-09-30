@@ -1,0 +1,7 @@
+"""Limits and the float32 layout for Producer input files."""
+
+TEXT_CHUNK_SIZE = 65536
+BINARY_CHUNK_SIZE = 65536
+BINARY_SAMPLE_FORMAT = "<f"
+BINARY_SAMPLE_SIZE = 4
+MAX_TOKEN_LENGTH = 1024

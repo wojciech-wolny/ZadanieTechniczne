@@ -39,6 +39,7 @@ src/
         protocol.py        wire format constant, struct format <d
     producer/
         __main__.py        CLI entry point, argument parsing
+        constants.py       input chunk sizes, float32 file format, token limit
         readers.py         read_text_samples, read_binary_samples, registry by format
         streaming.py       repeat_samples, limit_samples, send_samples with pacing
     server/

@@ -17,6 +17,7 @@
 13. **Path versioning.** REST resources use the prefix `/api/v1` (API-6). The next incompatible contract is `/api/v2`. `/docs` and `/openapi.json` stay unversioned.
 14. **Raw stream kept, packet protocol deferred.** [proposal-packet-protocol.md](proposal-packet-protocol.md) would let the server tell a clean end from a crash and reject foreign clients. The task needs neither: one trusted Producer, and a disconnect is handled the same way either way. The proposal stays as the next step if the format has to evolve.
 15. **Validate what breaks the result, not what is absurd.** A check stays when it prevents a crash, a wrong result, or unbounded memory on realistic input: rate, negative limit, window size, empty host, empty file pass, non finite values. It goes when it only rejects input nobody sends or a value the operator sets: upper bounds on ports, `MAX_TASKS`, the idle timeout and `--limit`, a request body size limit, a docs switch, socket keepalive and throttled rejection logs. The task excludes authentication and production deployment, and [hardening.md](hardening.md) records which findings were withdrawn.
+16. **Producer input constants have their own module.** Chunk sizes, the float32 file format `<f`, and the text token limit live in `src/producer/constants.py`. `src/common/protocol.py` stays the only home for the TCP format `<d` and the default hosts and ports. Server settings, CLI limits, and the TCP read size stay beside the code that uses them.
 
 ## Assumptions
 

@@ -46,7 +46,7 @@ HTTP defaults to `127.0.0.1:8000`. TCP defaults to `127.0.0.1:9000`. Overrides a
 5. One event loop runs the API and the receiver. A batch is processed without awaiting. A slow stdout sink can stall that loop. That trade off is accepted.
 6. Modules in `src/server/services/` stay free of FastAPI. Status codes are mapped in `src/server/main.py` and `src/server/api/`.
 7. The wire format has one home, `src/common/protocol.py`: `struct` format `<d`, 8 bytes. Input files are different. Text is whitespace separated numbers. Binary files are little endian float32, format `<f`, 4 bytes.
-8. Python in this repository has no code comments. Docstrings are one sentence plus `:param:`, `:return:`, `:raises:` and `:attr:` when useful, and they contain no hyphen characters. Use `X | None`, builtin generics and the `type` statement. Do not add `from __future__ import annotations`.
+8. Python in this repository has no code comments. Docstrings are one sentence plus `:param:`, `:return:`, `:raises:` and `:attr:` when useful, and they contain no hyphen characters. Use `X | None`, builtin generics and the `type` statement. Do not add `from __future__ import annotations`. A function name is the comment for an action. Split a nested or long block into those functions so the caller stays a short flat sequence. Three or more related values that travel together go on a dataclass. A protocol is the type when several classes share the same methods.
 
 ## Add an algorithm
 
@@ -75,6 +75,7 @@ HTTP defaults to `127.0.0.1:8000`. TCP defaults to `127.0.0.1:9000`. Overrides a
 | App, lifespan, task limit 409 | `src/server/main.py` |
 | Producer CLI | `src/producer/__main__.py` |
 | File readers | `src/producer/readers.py` |
+| Producer input limits and binary file format | `src/producer/constants.py` |
 | Rate, loop, limit, send | `src/producer/streaming.py` |
 
 Design notes that are already decided: `docs/architecture.md`, `docs/decisions.md`, `docs/rest-api.md`, `docs/wire-protocol.md`, `docs/testing-strategy.md`, `docs/ci.md`.
