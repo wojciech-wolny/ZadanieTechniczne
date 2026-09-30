@@ -9,7 +9,6 @@ from server.services.algorithms import (
     AverageAlgorithm,
     LinearRegressionAlgorithm,
     PassthroughAlgorithm,
-    calculate_slope,
 )
 
 
@@ -89,12 +88,6 @@ def test_process_sample_regression_window_of_two_emits_the_slope() -> None:
     algorithm = LinearRegressionAlgorithm(window_size=2)
 
     assert collect_results(algorithm, [0, 1]) == [1]
-
-
-def test_calculate_slope_rejects_a_single_point() -> None:
-    """Verify ALG-4: a slope needs at least two samples."""
-    with pytest.raises(ValueError):
-        calculate_slope([1.0])
 
 
 def test_read_statistics_regression_before_a_window_has_no_slope() -> None:

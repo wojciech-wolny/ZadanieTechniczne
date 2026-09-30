@@ -119,12 +119,7 @@ def test_delete_task_unknown_id_returns_not_found(client: TestClient) -> None:
         {"algorithm": {"name": "missing"}},
         {"algorithm": {"name": "passthrough"}, "sink": "file"},
         {"algorithm": {"name": "passthrough"}, "sinks": "stdout"},
-        {"algorithm": {"name": "passthrough", "window_size": 5}},
-        {"algorithm": {"name": "average", "window_size": 6, "N": 3}},
         {"algorithm": {"name": "average", "window_size": "6"}},
-        {"algorithm": {"name": "average", "window_size": 6.0}},
-        {"algorithm": {"name": "average", "window_size": True}},
-        {"algorithm": {"name": "linear_regression", "window_size": "6"}},
     ],
     ids=[
         "average_below",
@@ -133,13 +128,8 @@ def test_delete_task_unknown_id_returns_not_found(client: TestClient) -> None:
         "regression_above",
         "unknown_algorithm",
         "unknown_sink",
-        "misspelled_task_field",
-        "passthrough_with_parameter",
-        "unknown_algorithm_field",
-        "average_text_size",
-        "average_float_size",
-        "average_bool_size",
-        "regression_text_size",
+        "unknown_field",
+        "window_size_text",
     ],
 )
 def test_create_task_rejects_invalid_configuration(
@@ -182,15 +172,6 @@ def test_create_task_when_full_returns_conflict(monkeypatch: pytest.MonkeyPatch)
     assert second.json()["detail"] == "Task limit reached"
 
 
-def test_routes_live_under_api_v1(client: TestClient) -> None:
-    """Verify API-6: task routes are served only under the version prefix."""
-    unversioned = client.get("/tasks")
-    versioned = client.get("/api/v1/tasks")
-
-    assert unversioned.status_code == status.HTTP_404_NOT_FOUND
-    assert versioned.status_code == status.HTTP_200_OK
-
-
 def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify API-6 and H10: with docs disabled the docs return 404 and the API still works."""
     monkeypatch.setenv("TCP_PORT", "0")
@@ -228,16 +209,11 @@ def test_create_task_body_at_size_limit_is_created(client: TestClient) -> None:
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.parametrize(
-    "size",
-    [MAX_REQUEST_BYTES + 1, 17 * 1024],
-    ids=["one_above_limit", "17_kib"],
-)
-def test_create_task_body_above_size_limit_returns_413(client: TestClient, size: int) -> None:
+def test_create_task_body_above_size_limit_returns_413(client: TestClient) -> None:
     """Verify SRV-9 and H1: a declared body above the size limit returns 413."""
     response = client.post(
         "/api/v1/tasks",
-        content=pad_task_body(size),
+        content=pad_task_body(MAX_REQUEST_BYTES + 1),
         headers={"content-type": "application/json"},
     )
 

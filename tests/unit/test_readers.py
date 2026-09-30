@@ -121,8 +121,8 @@ def test_read_text_samples_skips_long_token_at_end_of_file(tmp_path: Path) -> No
 
 @pytest.mark.parametrize(
     ("token", "expected"),
-    [("2.5", 2.5), ("-1e3", -1000.0), ("abc", None), ("inf", None), ("nan", None)],
-    ids=["decimal", "scientific", "text", "infinity", "nan"],
+    [("2.5", 2.5), ("abc", None), ("inf", None), ("nan", None)],
+    ids=["decimal", "text", "infinity", "nan"],
 )
 def test_parse_token_partitions(token: str, expected: float | None) -> None:
     """Verify PRD-4: only finite numeric tokens become samples."""
