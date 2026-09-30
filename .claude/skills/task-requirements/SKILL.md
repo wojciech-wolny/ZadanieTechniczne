@@ -5,7 +5,7 @@ description: Numbered functional and project requirements of the streaming data 
 
 # Task Requirements
 
-Source: `wytyczne/task_python_2608-0.2.md`. This skill is a condensed, numbered version for traceability. When in doubt, the source file wins.
+Source: `wytyczne/task_python_2608-0.2.md`. This skill is a condensed, numbered version for traceability. When in doubt, the source file wins. Pass, Deferred, and out of scope checks for those IDs are in `docs/acceptance-criteria.md`.
 
 ## Guiding principles
 

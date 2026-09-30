@@ -11,6 +11,7 @@ ALG, OUT, API, DLV) come from the `task-requirements` skill.
 | [rest-api.md](rest-api.md) | REST endpoints, models, status codes |
 | [decisions.md](decisions.md) | Design decisions, assumptions, known limitations |
 | [implementation-plan.md](implementation-plan.md) | Ordered stages with requirement coverage |
+| [acceptance-criteria.md](acceptance-criteria.md) | Pass, Deferred, and out of scope checks from the task |
 | [testing-strategy.md](testing-strategy.md) | Test levels, techniques, oracles from example data |
 | [ci.md](ci.md) | GitHub Actions pipeline on a self-hosted runner |
 | [hardening.md](hardening.md) | Current controls, security review findings, hardening plan |

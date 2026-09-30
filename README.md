@@ -184,6 +184,7 @@ The longer form is in [docs/decisions.md](docs/decisions.md) and [docs/architect
 | [TCP wire protocol](docs/wire-protocol.md) | Sample encoding |
 | [REST API](docs/rest-api.md) | Endpoints and models |
 | [Decisions](docs/decisions.md) | Trade offs and assumptions |
+| [Acceptance criteria](docs/acceptance-criteria.md) | Pass, Deferred, and out of scope checks from the task |
 | [Testing strategy](docs/testing-strategy.md) | Test levels and example oracles |
 | [Continuous integration](docs/ci.md) | GitHub Actions on a self hosted runner |
 | [Hardening](docs/hardening.md) | Current controls, security review findings, hardening plan |
