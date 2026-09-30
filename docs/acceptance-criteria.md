@@ -164,4 +164,4 @@ These statements close choices and gaps the task left open. They are Pass for th
 | Failure | An exception in one task marks that task failed, closes its sink, and leaves the other tasks running. The failed task stays readable until it is deleted. |
 | ASCII halves | Rounding is Python `round`. `65.5` and `66.5` both become `B`. |
 | Rate | `rate` is a finite value from `0.1` to `1000000`. The first batch is sent immediately. Later batches follow a monotonic schedule. |
-| Settings | Hosts, ports, and the task limit come from environment settings. Defaults bind to `127.0.0.1`. |
+| Settings | Hosts, ports, and the task limit come from `.env`, then the process environment. `.env.example` is not loaded. Defaults bind to `127.0.0.1` when `.env` matches the example. |

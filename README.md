@@ -12,6 +12,7 @@ Python 3.13.7 is pinned in `.python-version`. Install [uv](https://docs.astral.s
 
 ```powershell
 uv sync
+copy .env.example .env
 ```
 
 `uv sync` creates the virtual environment, installs the locked dependencies, and installs the `producer` and `processing-server` commands.
@@ -27,7 +28,7 @@ uv run processing-server
 | HTTP API and docs | `http://127.0.0.1:8000` (`/docs` for the interactive API) |
 | TCP sample stream | `127.0.0.1:9000` |
 
-These environment variables override the defaults. Both applications bind to localhost unless you change the host.
+Copy `.env.example` to `.env` before you start. The programs read `.env` only. A variable in the shell overrides that file. Run the commands from the repository root so `.env` is found. The server listens on localhost until you change the host.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
@@ -52,8 +53,8 @@ uv run producer wytyczne/passthrough.txt --format txt --rate 1000
 | `--format` | `txt` or `bin` | `txt` |
 | `--rate` | Samples per second. Finite, from `0.1` to `1000000` | required |
 | `--limit` | Samples to send. `0` repeats the file until you stop the process | `0` |
-| `--host` | Processing Server host | `127.0.0.1` |
-| `--port` | Processing Server TCP port | `9000` |
+| `--host` | Processing Server host | `TCP_HOST` from `.env` |
+| `--port` | Processing Server TCP port | `TCP_PORT` from `.env` |
 
 `txt` is whitespace separated numbers. `bin` is little endian float32, 4 bytes each. `--limit 0` repeats the file until Ctrl+C. A failed connection or a file with no samples exits with status 1.
 

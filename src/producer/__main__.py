@@ -2,11 +2,12 @@
 
 import argparse
 import math
+import os
 import socket
 import sys
 from pathlib import Path
 
-from common.protocol import DEFAULT_TCP_HOST, DEFAULT_TCP_PORT
+from common.settings import load_env_file
 from producer.readers import SAMPLE_READERS
 from producer.streaming import EmptyInputError, limit_samples, repeat_samples, send_samples
 
@@ -54,6 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     :return: configured argument parser
     """
+    load_env_file()
     parser = argparse.ArgumentParser(prog="producer")
     parser.add_argument("input_file", help="path to the input file")
     parser.add_argument(
@@ -70,8 +72,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="samples to send, 0 means unlimited",
     )
-    parser.add_argument("--host", default=DEFAULT_TCP_HOST, help="server host")
-    parser.add_argument("--port", type=int, default=DEFAULT_TCP_PORT, help="server port")
+    parser.add_argument("--host", default=os.environ["TCP_HOST"], help="server host")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ["TCP_PORT"]),
+        help="server port",
+    )
     return parser
 
 

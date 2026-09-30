@@ -1,13 +1,9 @@
-"""Shared wire format and default endpoints."""
+"""Shared wire format."""
 
 import struct
 
 SAMPLE_FORMAT = "<d"
 SAMPLE_SIZE = 8
-DEFAULT_TCP_HOST = "127.0.0.1"
-DEFAULT_TCP_PORT = 9000
-DEFAULT_HTTP_HOST = "127.0.0.1"
-DEFAULT_HTTP_PORT = 8000
 
 
 def pack_samples(samples: list[float]) -> bytes:

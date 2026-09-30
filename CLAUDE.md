@@ -43,7 +43,7 @@ uv run ruff format --check .
 uv run pytest -q
 ```
 
-HTTP defaults to `127.0.0.1:8000`. TCP defaults to `127.0.0.1:9000`. Overrides are environment variables on `Settings` in `src/server/settings.py`.
+HTTP and TCP values come from `.env`. `.env.example` is the template and is not loaded. `load_env_file` fills unset variables from `.env`. The shell wins. `Settings` and the Producer then read the process environment. Copy `.env.example` to `.env` and run commands from the repository root.
 
 ## Invariants
 

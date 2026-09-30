@@ -46,6 +46,13 @@ jobs:
     permissions:
       contents: read
       actions: write
+    env:
+      HTTP_HOST: 127.0.0.1
+      HTTP_PORT: "8000"
+      TCP_HOST: 127.0.0.1
+      TCP_PORT: "9000"
+      MAX_TASKS: "32"
+      PRODUCER_IDLE_SECONDS: "30"
     steps:
       - uses: actions/checkout@v7
         with:

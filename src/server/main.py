@@ -7,6 +7,7 @@ import uvicorn
 from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
+from common.settings import load_env_file
 from server.api.stream import router as stream_router
 from server.api.tasks import router as tasks_router
 from server.services.receiver import SampleReceiver
@@ -58,6 +59,7 @@ def create_app() -> FastAPI:
 
     :return: configured application
     """
+    load_env_file()
     settings = Settings()
     app = FastAPI(title="Processing Server", lifespan=run_lifespan)
     app.state.settings = settings

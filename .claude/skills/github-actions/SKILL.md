@@ -27,6 +27,7 @@ Pipelines must be simple: one workflow, parallel jobs, a few readable steps. Eve
 8. Steps mirror local commands: lint, format check, tests. Nothing CI only.
 9. No secrets are needed. Never echo environment variables.
 10. Tests must not need a manually started server and must use free local ports, because several jobs may share one runner machine.
+11. The test job sets `HTTP_HOST`, `HTTP_PORT`, `TCP_HOST`, `TCP_PORT`, `MAX_TASKS`, and `PRODUCER_IDLE_SECONDS` to the same values as `.env.example`. The programs read `.env` only, and that file is not committed. The process environment wins over `.env`, and a reused runner may already define the names. Do not echo the values.
 
 ## Self-hosted security
 
@@ -85,6 +86,13 @@ jobs:
     permissions:
       contents: read
       actions: write
+    env:
+      HTTP_HOST: 127.0.0.1
+      HTTP_PORT: "8000"
+      TCP_HOST: 127.0.0.1
+      TCP_PORT: "9000"
+      MAX_TASKS: "32"
+      PRODUCER_IDLE_SECONDS: "30"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,4 +127,5 @@ jobs:
 - [ ] Read only permissions, plus `actions: write` only on the test job, concurrency, timeout
 - [ ] Fork pull requests skipped
 - [ ] Every step runnable locally with the same command
+- [ ] Test job env matches `.env.example` for host, port, task limit, and idle timeout
 - [ ] Workflow passes on the runner before merging

@@ -437,6 +437,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "h11" },
     { name = "pydantic-settings" },
+    { name = "python-dotenv" },
     { name = "uvicorn" },
 ]
 
@@ -453,6 +454,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141" },
     { name = "h11", specifier = ">=0.16" },
     { name = "pydantic-settings", specifier = ">=2.15" },
+    { name = "python-dotenv", specifier = ">=1.2" },
     { name = "uvicorn", specifier = ">=0.54" },
 ]
 

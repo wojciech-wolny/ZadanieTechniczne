@@ -32,7 +32,7 @@ This makes results independent of packet and read sizes (STR-1, STR-2). On disco
 
 ## Connection rules
 
-1. Default endpoint `127.0.0.1:9000`, configurable on both sides.
+1. Default endpoint `127.0.0.1:9000` when `.env` matches `.env.example`, overridable on both sides. `.env.example` is not loaded.
 2. The server accepts one Producer at a time. A second connection is closed immediately and logged (SRV-1).
 3. After the Producer disconnects, the server keeps running. Complete samples already dispatched, task statistics and partial algorithm windows remain. The next Producer therefore continues the same logical stream and may complete an earlier window (SRV-6). See [decisions.md](decisions.md), decision 6.
 4. The Producer does not reconnect automatically; it exits with a non zero code when the connection fails or drops.

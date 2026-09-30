@@ -3,13 +3,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from common.protocol import (
-    DEFAULT_HTTP_HOST,
-    DEFAULT_HTTP_PORT,
-    DEFAULT_TCP_HOST,
-    DEFAULT_TCP_PORT,
-)
-
 MAX_TASKS = 32
 PRODUCER_IDLE_SECONDS = 30.0
 
@@ -27,9 +20,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(extra="ignore")
 
-    tcp_host: str = Field(default=DEFAULT_TCP_HOST, min_length=1)
-    tcp_port: int = DEFAULT_TCP_PORT
-    http_host: str = Field(default=DEFAULT_HTTP_HOST, min_length=1)
-    http_port: int = DEFAULT_HTTP_PORT
+    tcp_host: str = Field(min_length=1)
+    tcp_port: int
+    http_host: str = Field(min_length=1)
+    http_port: int
     max_tasks: int = Field(default=MAX_TASKS, ge=1)
     producer_idle_seconds: float = Field(default=PRODUCER_IDLE_SECONDS, gt=0)

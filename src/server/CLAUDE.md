@@ -8,8 +8,10 @@ Use this file when changing anything under `src/server/`. The repository map is 
 
 `create_app` in `src/server/main.py` builds the app from `Settings`. `run_lifespan` creates one `TaskRegistry` and one `SampleReceiver`, stores both on `app.state`, stops the receiver on shutdown, then calls `TaskRegistry.close_all` so every stored task closes its sink. `TaskLimitError` becomes HTTP 409 with `{"detail": "Task limit reached"}`.
 
-| Setting | Default | Bound |
-|---------|---------|-------|
+`create_app` calls `load_env_file` before `Settings()`. `Settings` reads the process environment. `.env.example` is not loaded. Hosts and ports have no literal default in Python.
+
+| Setting | Value in the example `.env` | Bound |
+|---------|-------------------------|-------|
 | `HTTP_HOST` / `HTTP_PORT` | `127.0.0.1:8000` | host non empty |
 | `TCP_HOST` / `TCP_PORT` | `127.0.0.1:9000` | same |
 | `MAX_TASKS` | 32 | at least 1 |

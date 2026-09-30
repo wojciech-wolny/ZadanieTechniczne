@@ -36,7 +36,8 @@ flowchart LR
 pyproject.toml
 src/
     common/
-        protocol.py        wire format constant, struct format <d
+        protocol.py        wire format, struct format <d
+        settings.py        load_env_file from .env
     producer/
         __main__.py        CLI entry point, argument parsing
         constants.py       input chunk sizes, float32 file format, token limit
@@ -62,7 +63,7 @@ scripts/
     demo.py                starts server, creates tasks, runs producer
 ```
 
-`services/` never imports FastAPI. The TCP format `<d` lives only in `src/common/protocol.py`, because both processes must agree on it. Producer file limits and the float32 layout `<f` live in `src/producer/constants.py`, so a file read cannot reuse the wire format by accident. `MAX_WINDOW_SIZE` stays in `src/server/schemas.py`: it is the request limit, not an operator setting.
+`services/` never imports FastAPI. The TCP format `<d` lives only in `src/common/protocol.py`, because both processes must agree on it. Hosts and ports live in `.env`, because they are operator settings and both processes must still share one TCP address. `.env.example` is the template and is not loaded. Producer file limits and the float32 layout `<f` live in `src/producer/constants.py`, so a file read cannot reuse the wire format by accident. `MAX_WINDOW_SIZE` stays in `src/server/schemas.py`: it is the request limit, not an operator setting.
 
 ## Interfaces
 

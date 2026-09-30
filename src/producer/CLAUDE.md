@@ -14,7 +14,7 @@ Entry point `src/producer/__main__.py`, command `producer`.
 | `--format` | `txt` or `bin`, default `txt` |
 | `--rate` | Finite samples per second, from 0.1 to 1000000 |
 | `--limit` | Integer of 0 or more. `0` repeats the file until the process is stopped |
-| `--host` / `--port` | Default `127.0.0.1:9000` |
+| `--host` / `--port` | `os.environ["TCP_HOST"]` and `os.environ["TCP_PORT"]` after `load_env_file` (`127.0.0.1:9000` when `.env` matches the example) |
 
 A failed connection, or a file pass that yields no finite samples, exits with status 1. Connect timeout is 5 seconds.
 
