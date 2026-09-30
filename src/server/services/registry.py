@@ -63,6 +63,14 @@ class TaskRegistry:
         task.close_sink()
         return task
 
+    def close_all(self) -> None:
+        """Close the sink of every stored task and keep going when one close fails."""
+        for task in self._tasks.values():
+            try:
+                task.close_sink()
+            except Exception:
+                logger.warning("sink close failed for task %s", task.task_id)
+
     def dispatch(self, samples: list[float]) -> None:
         """Deliver samples to every running task captured at the start.
 

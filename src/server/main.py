@@ -42,6 +42,7 @@ async def run_lifespan(app: FastAPI) -> AsyncIterator[None]:
         yield
     finally:
         await receiver.stop()
+        registry.close_all()
 
 
 def handle_task_limit(_request: Request, _error: TaskLimitError) -> JSONResponse:

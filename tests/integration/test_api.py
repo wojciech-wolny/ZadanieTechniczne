@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from server.main import create_app
 from server.middleware import MAX_REQUEST_BYTES
+from server.services.sinks import SINK_FACTORIES
 
 
 def test_create_task_returns_created_task(client: TestClient) -> None:
@@ -170,6 +171,25 @@ def test_create_task_when_full_returns_conflict(monkeypatch: pytest.MonkeyPatch)
     assert first.status_code == status.HTTP_201_CREATED
     assert second.status_code == status.HTTP_409_CONFLICT
     assert second.json()["detail"] == "Task limit reached"
+
+
+def test_shutdown_closes_the_sink_of_a_running_task(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify API-4: stopping the server closes the sinks of tasks that are still stored."""
+    closed: list[bool] = []
+
+    class RecordingSink:
+        def write_results(self, results: list[float]) -> None:
+            return
+
+        def close(self) -> None:
+            closed.append(True)
+
+    monkeypatch.setenv("TCP_PORT", "0")
+    monkeypatch.setitem(SINK_FACTORIES, "null", RecordingSink)
+    with TestClient(create_app()) as client:
+        client.post("/api/v1/tasks", json={"algorithm": {"name": "passthrough"}})
+
+    assert closed == [True]
 
 
 def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPatch) -> None:

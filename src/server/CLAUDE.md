@@ -6,7 +6,7 @@ Use this file when changing anything under `src/server/`. The repository map is 
 
 ## Runtime
 
-`create_app` in `src/server/main.py` builds the app from `Settings`. `run_lifespan` creates one `TaskRegistry` and one `SampleReceiver`, stores both on `app.state`, and stops the receiver on shutdown. `TaskLimitError` becomes HTTP 409 with `{"detail": "Task limit reached"}`.
+`create_app` in `src/server/main.py` builds the app from `Settings`. `run_lifespan` creates one `TaskRegistry` and one `SampleReceiver`, stores both on `app.state`, stops the receiver on shutdown, then calls `TaskRegistry.close_all` so every stored task closes its sink. `TaskLimitError` becomes HTTP 409 with `{"detail": "Task limit reached"}`.
 
 | Setting | Default | Bound |
 |---------|---------|-------|
