@@ -164,14 +164,14 @@ def test_parse_limit_rejects_value_above_largest_size() -> None:
         parse_limit(str(sys.maxsize + 1))
 
 
-@pytest.mark.parametrize("value", ["-1", "65536", "abc"], ids=["below", "above", "text"])
+@pytest.mark.parametrize("value", ["0", "65536", "abc"], ids=["below", "above", "text"])
 def test_parse_port_rejects_values_outside_the_range(value: str) -> None:
-    """Verify PRD-10: the port must be from 0 through 65535."""
+    """Verify PRD-10: the server port must be from 1 through 65535."""
     with pytest.raises(argparse.ArgumentTypeError):
         parse_port(value)
 
 
-@pytest.mark.parametrize(("value", "expected"), [("0", 0), ("65535", 65535)], ids=["low", "high"])
+@pytest.mark.parametrize(("value", "expected"), [("1", 1), ("65535", 65535)], ids=["low", "high"])
 def test_parse_port_accepts_boundary_values(value: str, expected: int) -> None:
-    """Verify PRD-10: the lowest and highest TCP ports are accepted."""
+    """Verify PRD-10: the lowest and highest connectable TCP ports are accepted."""
     assert parse_port(value) == expected
