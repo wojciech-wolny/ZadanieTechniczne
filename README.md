@@ -56,7 +56,7 @@ uv run producer wytyczne/passthrough.txt --format txt --rate 1000
 | `--rate` | Samples per second. Finite, from `0.1` to `1000000` | required |
 | `--limit` | Samples to send, at most `sys.maxsize`. `0` repeats the file until you stop the process | `0` |
 | `--host` | Processing Server host | `127.0.0.1` |
-| `--port` | Processing Server TCP port, from 1 to 65535 | `9000` |
+| `--port` | Processing Server TCP port | `9000` |
 
 `txt` files contain whitespace separated numbers. `bin` files contain little endian float32 values (4 bytes each). The Producer reads the file in chunks, reopens it after each pass, and stops after `--limit` samples when the limit is greater than 0. Press Ctrl+C to stop an unlimited stream. A failed connection or a file that contains no samples exits with status 1.
 

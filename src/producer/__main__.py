@@ -1,9 +1,9 @@
 """Command line entry point for the sample producer."""
 
 import argparse
+import math
 import socket
 import sys
-from collections.abc import Callable
 from pathlib import Path
 
 from common.protocol import DEFAULT_TCP_HOST, DEFAULT_TCP_PORT
@@ -12,38 +12,9 @@ from producer.streaming import EmptyInputError, limit_samples, repeat_samples, s
 
 MIN_SAMPLE_RATE = 0.1
 MAX_SAMPLE_RATE = 1_000_000
-MIN_TCP_PORT = 1
-MAX_TCP_PORT = 65535
 CONNECT_TIMEOUT_SECONDS = 5.0
 RATE_ERROR = f"rate must be a finite number from {MIN_SAMPLE_RATE} to {MAX_SAMPLE_RATE}"
 LIMIT_ERROR = f"limit must be an integer from 0 to {sys.maxsize}"
-PORT_ERROR = f"port must be an integer from {MIN_TCP_PORT} to {MAX_TCP_PORT}"
-
-
-def parse_in_range[NumberType: (int, float)](
-    value: str,
-    convert: Callable[[str], NumberType],
-    lowest: NumberType,
-    highest: NumberType,
-    message: str,
-) -> NumberType:
-    """Convert command text to a number inside an inclusive range.
-
-    :param value: command text
-    :param convert: function that turns the text into a number
-    :param lowest: smallest accepted number
-    :param highest: largest accepted number
-    :param message: error text shown when the value is rejected
-    :return: the converted number
-    :raises argparse.ArgumentTypeError: when the text is not a number or is outside the range
-    """
-    try:
-        number = convert(value)
-    except ValueError as error:
-        raise argparse.ArgumentTypeError(message) from error
-    if not lowest <= number <= highest:
-        raise argparse.ArgumentTypeError(message)
-    return number
 
 
 def parse_rate(value: str) -> float:
@@ -53,7 +24,13 @@ def parse_rate(value: str) -> float:
     :return: samples per second
     :raises argparse.ArgumentTypeError: when the value is outside the accepted range
     """
-    return parse_in_range(value, float, MIN_SAMPLE_RATE, MAX_SAMPLE_RATE, RATE_ERROR)
+    try:
+        rate = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(RATE_ERROR) from error
+    if not math.isfinite(rate) or rate < MIN_SAMPLE_RATE or rate > MAX_SAMPLE_RATE:
+        raise argparse.ArgumentTypeError(RATE_ERROR)
+    return rate
 
 
 def parse_limit(value: str) -> int:
@@ -63,17 +40,29 @@ def parse_limit(value: str) -> int:
     :return: sample limit
     :raises argparse.ArgumentTypeError: when the value is outside the range or not an integer
     """
-    return parse_in_range(value, int, 0, sys.maxsize, LIMIT_ERROR)
+    try:
+        limit = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(LIMIT_ERROR) from error
+    if limit < 0 or limit > sys.maxsize:
+        raise argparse.ArgumentTypeError(LIMIT_ERROR)
+    return limit
 
 
 def parse_port(value: str) -> int:
-    """Parse the TCP port of the processing server from 1 to 65535.
+    """Parse a TCP port from 0 to 65535.
 
     :param value: command text
     :return: port number
     :raises argparse.ArgumentTypeError: when the value is outside the port range
     """
-    return parse_in_range(value, int, MIN_TCP_PORT, MAX_TCP_PORT, PORT_ERROR)
+    try:
+        port = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("port must be from 0 to 65535") from error
+    if port < 0 or port > 65535:
+        raise argparse.ArgumentTypeError("port must be from 0 to 65535")
+    return port
 
 
 def build_parser() -> argparse.ArgumentParser:
