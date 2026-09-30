@@ -37,8 +37,6 @@ These environment variables override the defaults. Both applications bind to loc
 | `TCP_PORT` | `9000` | TCP port |
 | `MAX_TASKS` | `32` | Maximum tasks kept at once, at least 1 |
 | `PRODUCER_IDLE_SECONDS` | `30` | Seconds without data before the Producer connection is closed, above 0. Keep it above 10 so a Producer at `--rate 0.1` stays connected |
-| `DOCS_ENABLED` | `true` | Serve `/docs`, `/redoc` and `/openapi.json`. Set `false` to hide them |
-
 A full window of 100000 samples takes about 3.2 MB, so the default 32 tasks take about 100 MB at most.
 
 Stdout task output is written to the server process, so watch that terminal.
@@ -64,7 +62,7 @@ Create a stdout task before starting the Producer if you want to see the decoded
 
 ## REST API
 
-Every resource is under `/api/v1`. A later incompatible API would use a new prefix. `/docs` and `/openapi.json` stay unversioned and are served unless `DOCS_ENABLED` is `false`.
+Every resource is under `/api/v1`. A later incompatible API would use a new prefix. `/docs` and `/openapi.json` stay unversioned.
 
 | Method | Path | Success | Other |
 |--------|------|---------|-------|

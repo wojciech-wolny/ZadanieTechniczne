@@ -14,8 +14,6 @@ Use this file when changing anything under `src/server/`. The repository map is 
 | `TCP_HOST` / `TCP_PORT` | `127.0.0.1:9000` | same |
 | `MAX_TASKS` | 32 | at least 1 |
 | `PRODUCER_IDLE_SECONDS` | 30 | above 0 |
-| `DOCS_ENABLED` | true | hides `/docs`, `/redoc`, `/openapi.json` |
-
 ## Sample path
 
 1. `SampleReceiver` accepts one producer. Further connections are closed. Reads are 64 KiB. Idle longer than `producer_idle_seconds` closes the socket.

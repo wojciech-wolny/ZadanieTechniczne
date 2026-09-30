@@ -8,7 +8,7 @@ Review status: the first review found no critical or high issues, 2 medium and 1
 
 Both sockets bind to `127.0.0.1` by default. The HTTP API and the TCP sample port have no authentication, so any local process can create tasks and inject samples. Setting `HTTP_HOST` or `TCP_HOST` to another address exposes that port on the chosen interface. An empty value is rejected at startup.
 
-`MAX_TASKS` is at least 1 and defaults to 32. `PRODUCER_IDLE_SECONDS` is above 0 and defaults to 30. Ports, the task maximum, and the idle timeout are operator settings, so they have no upper bound. A port outside 0 through 65535 fails at startup with an `OverflowError` from the socket. Keep it above 10 seconds, the longest gap between samples at the minimum rate of 0.1, or slow Producers are disconnected. `DOCS_ENABLED` defaults to true. Unknown environment variables are ignored.
+`MAX_TASKS` is at least 1 and defaults to 32. `PRODUCER_IDLE_SECONDS` is above 0 and defaults to 30. Keep it above 10 seconds, the longest gap between samples at the minimum rate of 0.1, or slow Producers are disconnected. Ports, the task maximum, and the idle timeout are operator settings, so they have no upper bound. A port outside 0 through 65535 fails at startup with an `OverflowError` from the socket. Unknown environment variables are ignored.
 
 ## Current controls
 
@@ -60,7 +60,7 @@ Dispatch works on a snapshot of the running tasks. Creation and deletion take ef
 
 If one task raises, only that task is marked `failed` and its sink is closed. `error` holds the exception class name only, with no message, traceback, or path. A non finite statistic becomes JSON `null`, and the stdout sink writes `#` for a non finite result. A NaN slope is reported as `last_slope` but does not change `min_slope` or `max_slope`.
 
-FastAPI runs with debug off, so an unexpected error returns a generic 500. `/docs`, `/redoc`, and `/openapi.json` are served unless `DOCS_ENABLED` is false.
+FastAPI runs with debug off, so an unexpected error returns a generic 500. `/docs`, `/redoc`, and `/openapi.json` are always served.
 
 Stdout writes run on the event loop, so a blocked terminal stalls every task and the Producer. OUT-4 maps 0 through 127 to characters. That range includes ESC and other control codes, so the Producer can send ANSI escape sequences to the server terminal (accepted, see Residual risk).
 
@@ -136,7 +136,7 @@ Status: done.
 **H10. API surface advertised.** `src/server/main.py:56,68`. The docs endpoints and the `server` header are always exposed. This matters only on a non loopback bind.
 Fix: a `DOCS_ENABLED` setting, default true to keep the README workflow, that sets `docs_url`, `redoc_url`, and `openapi_url` to `None` when false. Pass `server_header=False` to `uvicorn.run`.
 Test: with docs disabled, `/docs` returns 404 and `/api/v1/tasks` still works.
-Status: done for `DOCS_ENABLED`. The `server_header=False` option was withdrawn.
+Status: withdrawn. The task does not ask for a switch, and the default bind is loopback. The `DOCS_ENABLED` setting and `server_header=False` are gone.
 
 **H11. No dependency floors.** `pyproject.toml:7`. An install that ignores the lock can resolve old releases, for example h11 below 0.16 with a known request smuggling issue.
 Fix: floors near the locked versions for `fastapi`, `uvicorn`, and `pydantic-settings`, plus `h11>=0.16`. Refresh `uv.lock`.

@@ -14,9 +14,6 @@ from server.services.registry import TaskLimitError, TaskRegistry
 from server.settings import Settings
 
 API_V1_PREFIX = "/api/v1"
-DOCS_URL = "/docs"
-REDOC_URL = "/redoc"
-OPENAPI_URL = "/openapi.json"
 
 
 @asynccontextmanager
@@ -62,13 +59,7 @@ def create_app() -> FastAPI:
     :return: configured application
     """
     settings = Settings()
-    app = FastAPI(
-        title="Processing Server",
-        lifespan=run_lifespan,
-        docs_url=DOCS_URL if settings.docs_enabled else None,
-        redoc_url=REDOC_URL if settings.docs_enabled else None,
-        openapi_url=OPENAPI_URL if settings.docs_enabled else None,
-    )
+    app = FastAPI(title="Processing Server", lifespan=run_lifespan)
     app.state.settings = settings
     app.add_exception_handler(TaskLimitError, handle_task_limit)
     api_v1 = APIRouter(prefix=API_V1_PREFIX)

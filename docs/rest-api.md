@@ -1,6 +1,6 @@
 # REST API
 
-Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). Interactive docs stay at `/docs` unless `DOCS_ENABLED` is `false`. A later API version adds a new prefix and leaves these paths unchanged.
+Base URL `http://127.0.0.1:8000`. Every resource lives under `/api/v1` (API-6). Interactive docs are served at `/docs`. A later API version adds a new prefix and leaves these paths unchanged.
 
 ## Endpoints
 

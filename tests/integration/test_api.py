@@ -191,22 +191,6 @@ def test_shutdown_closes_the_sink_of_a_running_task(monkeypatch: pytest.MonkeyPa
     assert closed == [True]
 
 
-def test_docs_disabled_hides_docs_and_keeps_the_api(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Verify API-6 and H10: with docs disabled the docs return 404 and the API still works."""
-    monkeypatch.setenv("TCP_PORT", "0")
-    monkeypatch.setenv("DOCS_ENABLED", "false")
-    with TestClient(create_app()) as client:
-        docs = client.get("/docs")
-        redoc = client.get("/redoc")
-        schema = client.get("/openapi.json")
-        tasks = client.get("/api/v1/tasks")
-
-    assert docs.status_code == status.HTTP_404_NOT_FOUND
-    assert redoc.status_code == status.HTTP_404_NOT_FOUND
-    assert schema.status_code == status.HTTP_404_NOT_FOUND
-    assert tasks.status_code == status.HTTP_200_OK
-
-
 def test_read_stream_starts_idle(client: TestClient) -> None:
     """Verify SRV-2 and SRV-5: the stream starts with no producer and no samples."""
     response = client.get("/api/v1/stream")

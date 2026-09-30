@@ -14,6 +14,5 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     monkeypatch.setenv("TCP_PORT", "0")
     monkeypatch.delenv("MAX_TASKS", raising=False)
     monkeypatch.delenv("PRODUCER_IDLE_SECONDS", raising=False)
-    monkeypatch.delenv("DOCS_ENABLED", raising=False)
     with TestClient(create_app()) as test_client:
         yield test_client

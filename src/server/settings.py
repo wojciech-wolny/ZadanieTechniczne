@@ -23,7 +23,6 @@ class Settings(BaseSettings):
     :attr http_port: bind port of the HTTP server
     :attr max_tasks: maximum number of tasks kept at once
     :attr producer_idle_seconds: seconds without data before a producer is disconnected
-    :attr docs_enabled: whether the interactive docs and the OpenAPI schema are served
     """
 
     model_config = SettingsConfigDict(extra="ignore")
@@ -34,4 +33,3 @@ class Settings(BaseSettings):
     http_port: int = DEFAULT_HTTP_PORT
     max_tasks: int = Field(default=MAX_TASKS, ge=1)
     producer_idle_seconds: float = Field(default=PRODUCER_IDLE_SECONDS, gt=0)
-    docs_enabled: bool = True
